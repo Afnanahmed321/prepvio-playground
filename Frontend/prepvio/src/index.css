@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+body {
+  font-family: 'Arial', sans-serif;
+}
+
+/* Custom font for Header only */
+@layer utilities {
+  .font-aquire {
+    font-family: 'Aquire', sans-serif;
+  }
+}

@@ -1,0 +1,403 @@
+// import React from "react";
+// // We only import Routes and Route here, as the Router is provided
+// // by the parent component (main.jsx).
+// import { Routes, Route } from "react-router-dom";
+// import Home from "./HomePages/Home";
+// import SignUpPage from "./pages/SignUpPage";
+// import LoginPage from"../src/pages/LoginPage"
+
+// const App = () => {
+//   return (
+//     // The <Routes> component handles all the routing logic for the app.
+//     <Routes>
+//       <Route path="/" element={<Home />} />
+//       <Route path="/signup" element={<SignUpPage />} />
+// 	  <Route path="/login" element={<LoginPage />} />
+//     </Routes>
+//   );
+// };
+
+// export default App;
+
+import { useState } from "react";
+import { Navigate, Route, Routes } from "react-router-dom"; 
+import Home from "./HomePages/Home.jsx"; 
+import Layout from "./components/Layout.jsx";
+import Footer from "./HomePages/Footer.jsx";
+import SignUpPage from "./pages/SignUpPage.jsx";
+import LoginPage from "./pages/LoginPage.jsx";
+import EmailVerificationPage from "./pages/EmailVerificationPage.jsx";
+import DashboardPage from "./Dashboard/DashBoardPage.jsx";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage.jsx";
+import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
+
+import LearnAndPerform from "./ServiceDetails/Learn and perfrom/LearnAndPerfrom.jsx";
+import Channels from "./ServiceDetails/Learn and perfrom/Channels.jsx";
+// import CheckYourAbility from "./ServiceDetails/CheckYourAbility.jsx";
+import ScrollToTop from "./ScrollToTop.jsx";
+import VideoPlayer from "./ServiceDetails/Learn and perfrom/VideoPlayer.jsx";
+
+// Check Your Ability pages
+import SelectRolesAndCompany from "./ServiceDetails/Check_Your_Ability/pages/selecting_roles_and_typeofcompany/SelectRolesAndCompany.jsx";
+import Rounds from "./ServiceDetails/Check_Your_Ability/pages/selecting_roles_and_typeofcompany/Rounds.jsx";
+import InterviewScreen from "./ServiceDetails/Check_Your_Ability/pages/Interview_page/InterviewScreen.jsx";
+import AfterInterview from "./ServiceDetails/Check_Your_Ability/pages/Interview_page/AfterInterview.jsx";
+
+
+import FAQs from "./Dashboard/FAQs.jsx";
+import Interview from "./Dashboard/Interview.jsx";
+import Learning from "./Dashboard/Learning.jsx";
+import Message from "./Dashboard/Message.jsx";
+import Notifications from "./Dashboard/Notfication.jsx";
+import Payment from "./Dashboard/Payment.jsx";
+import SavedCourses from "./Dashboard/SavedCourse.jsx";
+import Account from "./Dashboard/setting.jsx";
+
+import LoadingSpinner from "./components/LoadingSpinner.jsx";
+
+import { Toaster } from "react-hot-toast";
+import { useAuthStore } from "./store/authstore.js";
+import { useEffect } from "react";
+
+// protect routes that require authentication
+const ProtectedRoute = ({ children }) => {
+	const { isAuthenticated, user } = useAuthStore();
+
+	if (!isAuthenticated) {
+		return <Navigate to='/login' replace />;
+	}
+
+	if (!user.isVerified) {
+		return <Navigate to='/verify-email' replace />;
+	}
+
+	return children;
+};
+
+// redirect authenticated users to the home page
+const RedirectAuthenticatedUser = ({ children }) => {
+	const { isAuthenticated, user } = useAuthStore();
+
+	if (isAuthenticated && user.isVerified) {
+		return <Navigate to='/' replace />;
+	}
+
+	return children;
+};
+
+function App() {
+	const { isCheckingAuth, checkAuth } = useAuthStore();
+
+	// 🔥 Check Your Ability shared state
+	const [companyType, setCompanyType] = useState(null);
+	const [role, setRole] = useState(null);
+
+	useEffect(() => {
+		checkAuth();
+	}, [checkAuth]);
+
+	if (isCheckingAuth) return <LoadingSpinner />;
+
+	return (
+		<>
+			<ScrollToTop />
+
+			<Routes>
+				{/* Home */}
+				<Route path='/' element={<Home />} />
+
+				{/* Dashboard (Protected) */}
+				<Route
+					path='/dashboard'
+					element={
+						<ProtectedRoute>
+							<Layout />
+						</ProtectedRoute>
+					}
+				>
+					<Route index element={<DashboardPage />} />
+					<Route path="setting" element={<Account />} />
+					<Route path="notifications" element={<Notifications />} />
+					<Route path="learning" element={<Learning />} />
+					<Route path="saved-courses" element={<SavedCourses />} />
+					<Route path="interview-analysis" element={<Interview />} />
+					<Route path="payroll" element={<Payment />} />
+					<Route path="messages/inbox" element={<Message />} />
+					<Route path="help/faq" element={<FAQs />} />
+				</Route>
+
+				{/* Auth */}
+				<Route
+					path='/signup'
+					element={
+						<RedirectAuthenticatedUser>
+							<SignUpPage />
+						</RedirectAuthenticatedUser>
+					}
+				/>
+				<Route
+					path='/login'
+					element={
+						<RedirectAuthenticatedUser>
+							<LoginPage />
+						</RedirectAuthenticatedUser>
+					}
+				/>
+				<Route path='/verify-email' element={<EmailVerificationPage />} />
+				<Route path='/forgot-password' element={<ForgotPasswordPage />} />
+				<Route path='/reset-password/:token' element={<ResetPasswordPage />} />
+
+				{/* Services */}
+				<Route path="/services/learn--perform" element={<LearnAndPerform />} />
+				<Route path="/services/:serviceSlug/:courseId" element={<Channels />} />
+				<Route path="/:channelName/:channelId/:courseId" element={<VideoPlayer />} />
+
+				{/* ========================= */}
+				{/* 🔥 CHECK YOUR ABILITY FLOW */}
+				{/* ========================= */}
+				<Route path="/services/check-your-ability">
+					<Route
+						index
+						element={
+							<SelectRolesAndCompany
+								companyType={companyType}
+								setCompanyType={setCompanyType}
+								role={role}
+								setRole={setRole}
+							/>
+						}
+					/>
+					<Route
+						path="rounds"
+						element={<Rounds companyType={companyType} role={role} />}
+					/>
+					<Route
+						path="interview"
+						element={<InterviewScreen companyType={companyType} role={role} />}
+					/>
+					<Route path="after-interview" element={<AfterInterview />} />
+				</Route>
+
+				{/* Catch-all */}
+				<Route path='*' element={<Navigate to='/' replace />} />
+			</Routes>
+
+			<Footer />
+			<Toaster />
+		</>
+	);
+}
+
+export default App;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import { Navigate, Route, Routes } from "react-router-dom";
+// import FloatingShape from "./components/FloatingShape.jsx";
+
+// import SignUpPage from "./pages/SignUpPage.jsx";
+// import LoginPage from "./pages/LoginPage.jsx";
+// import EmailVerificationPage from "./pages/EmailVerificationPage.jsx";
+// import DashboardPage from "./pages/DashBoardPage.jsx";
+// import ForgotPasswordPage from "./pages/ForgotPasswordPage.jsx";
+// import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
+
+// import LoadingSpinner from "./components/LoadingSpinner.jsx";
+
+// import { Toaster } from "react-hot-toast";
+// import { useAuthStore } from "./store/authstore.js";
+// import { useEffect } from "react";
+
+// // Protect routes that require authentication
+// const ProtectedRoute = ({ children }) => {
+// 	const { isAuthenticated, user } = useAuthStore();
+// 	console.log("ProtectedRoute check:", isAuthenticated, user);
+
+// 	if (!isAuthenticated) {
+// 		return <Navigate to='/login' replace />;
+// 	}
+
+// 	if (!user?.isVerified) {
+// 		return <Navigate to='/verify-email' replace />;
+// 	}
+
+// 	return children;
+// };
+
+// // Redirect authenticated users away from login/signup
+// const RedirectAuthenticatedUser = ({ children }) => {
+// 	const { isAuthenticated, user } = useAuthStore();
+// 	console.log("RedirectAuth check:", isAuthenticated, user);
+
+// 	if (isAuthenticated && user?.isVerified) {
+// 		return <Navigate to='/' replace />;
+// 	}
+
+// 	return children;
+// };
+
+// function App() {
+// 	const { isCheckingAuth, checkAuth } = useAuthStore();
+
+// 	useEffect(() => {
+// 		checkAuth();
+// 	}, [checkAuth]);
+
+// 	if (isCheckingAuth) return <LoadingSpinner />;
+
+// 	return (
+// 		<div
+// 			className='min-h-screen bg-gradient-to-br
+//     from-purple-50 via-pink-50 to-blue-300 flex items-center justify-center relative overflow-hidden'
+// 		>
+// 			{/* Floating shapes background */}
+// 			<FloatingShape color='bg-gray-400' size='w-64 h-64' top='-5%' left='10%' delay={0} />
+// 			<FloatingShape color='bg-gray-400' size='w-48 h-48' top='70%' left='80%' delay={5} />
+// 			<FloatingShape color='bg-gray-500' size='w-32 h-32' top='40%' left='-10%' delay={2} />
+
+// 			<Routes>
+// 				<Route
+// 					path='/'
+// 					element={
+// 						<ProtectedRoute>
+// 							<DashboardPage />
+// 						</ProtectedRoute>
+// 					}
+// 				/>
+// 				<Route
+// 					path='/signup'
+// 					element={
+// 						<RedirectAuthenticatedUser>
+// 							<SignUpPage />
+// 						</RedirectAuthenticatedUser>
+// 					}
+// 				/>
+// 				<Route
+// 					path='/login'
+// 					element={
+// 						<RedirectAuthenticatedUser>
+// 							<LoginPage />
+// 						</RedirectAuthenticatedUser>
+// 					}
+// 				/>
+// 				<Route path='/verify-email' element={<EmailVerificationPage />} />
+
+// 				<Route
+// 					path='/forgot-password'
+// 					element={
+// 						<RedirectAuthenticatedUser>
+// 							<ForgotPasswordPage />
+// 						</RedirectAuthenticatedUser>
+// 					}
+// 				/>
+
+// 				<Route
+// 					path='/reset-password/:token'
+// 					element={
+// 						<RedirectAuthenticatedUser>
+// 							<ResetPasswordPage />
+// 						</RedirectAuthenticatedUser>
+// 					}
+// 				/>
+
+// 				{/* catch all routes */}
+// 				<Route path='*' element={<Navigate to='/' replace />} />
+// 			</Routes>
+// 			<Toaster />
+// 		</div>
+// 	);
+// }
+
+// export default App;
