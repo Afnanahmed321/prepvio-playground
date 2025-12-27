@@ -120,6 +120,26 @@ router.get("/:sessionId", verifyToken, async (req, res) => {
   }
 });
 
+router.delete("/:id", verifyToken, async (req, res) => {
+  try {
+    const session = await InterviewSession.findOne({
+      _id: req.params.id,
+      userId: req.userId, // IMPORTANT: ownership check
+    });
+
+    if (!session) {
+      return res.status(404).json({ success: false, message: "Interview not found" });
+    }
+
+    await session.deleteOne();
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Delete interview failed:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 
 
 export default router;

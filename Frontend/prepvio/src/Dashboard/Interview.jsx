@@ -3,12 +3,17 @@ import axios from "axios";
 import { Search, FileText, Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { Trash2 } from "lucide-react";
+import ConfirmDeleteModal from "../components/ConfirmDeleteModal.jsx";
+
 
 const Interview = () => {
   const navigate = useNavigate();
   const [interviews, setInterviews] = useState([]);
   const [view, setView] = useState("list");
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+const [deleting, setDeleting] = useState(false);
 
   // ✅ UPDATED: Pass full interview data to preview
   const handlePreview = (interview) => {
@@ -76,6 +81,36 @@ const Interview = () => {
     );
   }
 
+  const handleDeleteClick = (interviewId) => {
+  setDeleteTarget(interviewId);
+};
+
+const confirmDelete = async () => {
+  if (!deleteTarget) return;
+
+  try {
+    setDeleting(true);
+
+    await axios.delete(
+      `http://localhost:5000/api/interview-session/${deleteTarget}`,
+      { withCredentials: true }
+    );
+
+    setInterviews((prev) =>
+      prev.filter((i) => i._id !== deleteTarget)
+    );
+
+    setDeleteTarget(null);
+  } catch (err) {
+    console.error("Delete failed:", err);
+    alert("Failed to delete interview");
+  } finally {
+    setDeleting(false);
+  }
+};
+
+
+
   return (
     <div className="flex flex-col h-screen p-6">
       <main className="flex-1 overflow-y-auto">
@@ -91,21 +126,19 @@ const Interview = () => {
             <div className="flex gap-4 mt-4">
               <button
                 onClick={() => setView("list")}
-                className={`px-4 py-2 rounded-lg transition ${
-                  view === "list" 
-                    ? "bg-white/70 shadow" 
+                className={`px-4 py-2 rounded-lg transition ${view === "list"
+                    ? "bg-white/70 shadow"
                     : "bg-white/40 hover:bg-white/50"
-                }`}
+                  }`}
               >
                 List View
               </button>
               <button
                 onClick={() => setView("timeline")}
-                className={`px-4 py-2 rounded-lg transition ${
-                  view === "timeline" 
-                    ? "bg-white/70 shadow" 
+                className={`px-4 py-2 rounded-lg transition ${view === "timeline"
+                    ? "bg-white/70 shadow"
                     : "bg-white/40 hover:bg-white/50"
-                }`}
+                  }`}
               >
                 Timeline View
               </button>
@@ -139,7 +172,7 @@ const Interview = () => {
                           <p className="text-sm text-gray-600 mt-1">
                             {interview.companyType}
                           </p>
-                          
+
                           <div className="flex gap-4 mt-3 text-xs text-gray-500">
                             <div className="flex items-center gap-1">
                               <Calendar className="w-4 h-4" />
@@ -154,14 +187,7 @@ const Interview = () => {
                           </div>
 
                           {/* Stats */}
-                          <div className="flex gap-4 mt-3 text-xs">
-                            <span className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded">
-                              {interview.messages?.length || 0} messages
-                            </span>
-                            <span className="px-2 py-1 bg-green-100 text-green-700 rounded">
-                              {interview.solvedProblems?.length || 0} problems
-                            </span>
-                          </div>
+
                         </div>
 
                         <div className="flex gap-2">
@@ -180,6 +206,15 @@ const Interview = () => {
                           >
                             View PDF
                           </button>
+
+                          <button
+                            onClick={() => handleDeleteClick(interview._id)}
+                            className="px-4 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition flex items-center gap-1"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </button>
+
                         </div>
                       </div>
                     </div>
@@ -221,7 +256,7 @@ const Interview = () => {
                               {/* Stats */}
                               <div className="flex gap-4 mt-3 text-xs">
                                 <span className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded">
-                                  {interview.messages?.length || 0} messages
+                                  {interview.messages?.length || 0} message
                                 </span>
                                 <span className="px-2 py-1 bg-green-100 text-green-700 rounded">
                                   {interview.solvedProblems?.length || 0} problems
@@ -255,6 +290,14 @@ const Interview = () => {
             </>
           )}
         </div>
+
+        <ConfirmDeleteModal
+  open={Boolean(deleteTarget)}
+  onCancel={() => setDeleteTarget(null)}
+  onConfirm={confirmDelete}
+  loading={deleting}
+/>
+
       </main>
     </div>
   );

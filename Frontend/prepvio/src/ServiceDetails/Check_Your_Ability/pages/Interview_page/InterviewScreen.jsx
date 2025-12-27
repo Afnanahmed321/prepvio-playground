@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { PhoneOff, MessageSquare, Code, Maximize, Minimize, X, Mic, ListChecks } from "lucide-react";
+import { PhoneOff, MessageSquare, Code, Maximize, Minimize, X, Mic, ListChecks, Play, Code2, Terminal, CheckCircle2, XCircle } from "lucide-react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, useGLTF } from "@react-three/drei";
 import { useNavigate } from "react-router-dom";
@@ -10,113 +10,95 @@ import { useLocation } from "react-router-dom";
 // --- Code Editor Modal Component (fixed + robust) ---
 const CodeEditorModal = ({ isOpen, onClose, problem, onSuccess, onSkip }) => {
   const [language, setLanguage] = useState("javascript");
+  const [editorValue, setEditorValue] = useState("");
   const [output, setOutput] = useState([]);
   const [loading, setLoading] = useState(false);
-  const editorRef = useRef(null);
-  const [initialEditorValue, setInitialEditorValue] = useState("// Waiting for coding problem...");
 
   if (!isOpen) return null;
 
-  // Generate a sensible boilerplate if problem.boilerplate missing
-  const generateBoilerplateFromProblem = (problemObj, lang) => {
-    if (!problemObj) return "// Waiting for coding problem...";
+  /* -------------------- BOILERPLATE -------------------- */
+  const generateBoilerplate = (problemObj, lang) => {
+    if (!problemObj) return "";
 
-    const titleLine = `// ${problemObj.title || "Coding Challenge"}`;
-    const descLines = problemObj.description
-      ? problemObj.description.split("\n").map((l) => `// ${l}`).join("\n")
-      : "";
-    const header = `${titleLine}\n${descLines}\n\n`;
+    const title = `// ${problemObj.title}\n`;
+    const desc =
+      problemObj.description
+        ?.split("\n")
+        .map((l) => `// ${l}`)
+        .join("\n") + "\n\n";
+
+    const fn = problemObj.functionName || "solve";
 
     if (lang === "javascript") {
-      const pb = (problemObj.boilerplate && problemObj.boilerplate.javascript) || "";
-      if (pb) return pb;
-      const fnName = problemObj.functionName || "solve";
-      return `${header}// Implement ${fnName}\nfunction ${fnName}(${problemObj.params || ""}) {\n  // TODO\n}\n\n// Example invocation\n// console.log(${fnName}(${(problemObj.testCases && problemObj.testCases[0] && problemObj.testCases[0].input) || ""}));`;
+      return `${title}${desc}function ${fn}(${problemObj.params || ""}) {\n  // TODO\n}\n`;
     }
 
     if (lang === "python") {
-      const pb = (problemObj.boilerplate && problemObj.boilerplate.python) || "";
-      if (pb) return pb;
-      const fnName = problemObj.functionName || "solve";
-      return `${header}def ${fnName}(${problemObj.params || ""}):\n    # TODO\n    pass\n\n# Example:\n# print(${fnName}(${(problemObj.testCases && problemObj.testCases[0] && problemObj.testCases[0].input) || ""}))`;
+      return `${title}${desc}def ${fn}(${problemObj.params || ""}):\n    pass\n`;
     }
 
     if (lang === "cpp") {
-      const pb = (problemObj.boilerplate && problemObj.boilerplate.cpp) || "";
-      if (pb) return pb;
-      const fnName = problemObj.functionName || "solve";
-      return `${header}#include <bits/stdc++.h>\nusing namespace std;\n\n// Implement ${fnName}\nint main() {\n  // TODO: implement and print output\n  return 0;\n}`;
+      return `${title}${desc}#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n  return 0;\n}`;
     }
 
-    return problemObj.boilerplate?.[lang] || header;
+    return "";
   };
 
+  /* -------------------- SYNC EDITOR WITH PROBLEM -------------------- */
   useEffect(() => {
-    // update the initial editor content when problem or language changes
-    const val = generateBoilerplateFromProblem(problem, language);
-    setInitialEditorValue(val);
-    if (editorRef.current && typeof editorRef.current.setValue === "function") {
-      // ensure editor shows the latest problem + language
-      editorRef.current.setValue(val);
-    }
+    if (!problem) return;
+
+    const val = generateBoilerplate(problem, language);
+    setEditorValue(val);
   }, [problem, language]);
 
-  const handleEditorDidMount = (editor, monaco) => {
-    editorRef.current = editor;
-    // ensure the value is set on mount as well
-    const val = generateBoilerplateFromProblem(problem, language);
-    setInitialEditorValue(val);
-    try {
-      editor.setValue(val);
-    } catch (e) {
-      // ignore setValue errors
-    }
-  };
-
+  /* -------------------- RUN CODE -------------------- */
   const handleRun = async () => {
-    const code = editorRef.current?.getValue();
-    if (!code || !problem?.testCases) {
-      setOutput([{ id: 0, output: "⚠️ No test cases available!" }]);
+    if (!editorValue || !problem?.testCases) {
+      setOutput([{ id: 0, output: "No test cases available." }]);
       return;
     }
 
     setLoading(true);
-    setOutput([{ id: 0, output: "⏳ Running test cases..." }]);
+    setOutput([{ id: 0, output: "Running test cases..." }]);
 
     try {
       const results = [];
       let allPassed = true;
 
       for (let i = 0; i < problem.testCases.length; i++) {
-        const test = problem.testCases[i];
-        const args = test.input;
+        const t = problem.testCases[i];
 
-        const executionBoilerplate =
+        const runner =
           language === "python"
-            ? `\n\nprint(${problem.functionName}(${args}))`
+            ? `\nprint(${problem.functionName}(${t.input}))`
             : language === "cpp"
-              ? `\n#include <iostream>\nint main() {\n  std::cout << ${problem.functionName}(${args}) << std::endl;\n  return 0;\n}`
-              : `\n\nconsole.log(${problem.functionName}(${args}));`;
-
-        const userCode = `${code}\n${executionBoilerplate}`;
+              ? `\n#include <iostream>\nint main(){ std::cout << ${problem.functionName}(${t.input}); }`
+              : `\nconsole.log(${problem.functionName}(${t.input}));`;
 
         const res = await fetch("http://localhost:5000/run", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ language, code: userCode }),
+          body: JSON.stringify({
+            language,
+            code: editorValue + runner,
+          }),
         });
 
         const data = await res.json();
-        const result = (data.run?.output || data.run?.stderr || "").toString().trim() || "No output";
+        const out =
+          data.run?.output?.trim() ||
+          data.run?.stderr?.trim() ||
+          "No output";
 
-        const passed = result === (test.expected || "").toString().trim();
+        const passed = out === String(t.expected).trim();
         if (!passed) allPassed = false;
 
         results.push({
           id: i + 1,
-          input: test.input,
-          expected: test.expected,
-          output: result,
+          input: t.input,
+          expected: t.expected,
+          output: out,
           passed,
         });
       }
@@ -124,184 +106,154 @@ const CodeEditorModal = ({ isOpen, onClose, problem, onSuccess, onSkip }) => {
       setOutput(results);
 
       if (allPassed) {
-        const finalUserCode = editorRef.current.getValue();
         setTimeout(() => {
-          onSuccess(finalUserCode, results);
-        }, 800);
+          onSuccess(editorValue, results);
+        }, 600);
       }
-    } catch (err) {
-      console.error(err);
-      setOutput([{ id: 0, output: "❌ Execution error. Check backend connection." }]);
+    } catch {
+      setOutput([{ id: 0, output: "Execution failed. Backend error." }]);
     } finally {
       setLoading(false);
     }
   };
 
+  /* -------------------- UI -------------------- */
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center p-4">
-      <div className="w-full h-full max-w-7xl max-h-[95vh] bg-gray-900 rounded-lg shadow-2xl flex flex-col">
-        {/* Header */}
-        <div className="flex justify-between items-center bg-gray-800 px-6 py-4 border-b border-gray-700 rounded-t-lg">
-          <h2 className="text-xl font-semibold text-white">Code Editor</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-700 rounded-full transition"
-          >
-            <X className="w-6 h-6 text-white" />
-          </button>
-        </div>
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+      <div className="w-full max-w-7xl h-[90vh] rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 text-white relative flex">
 
-        <div className="flex flex-1 overflow-hidden">
-          {/* Problem Description */}
-          <div className="w-1/3 border-r border-gray-700 overflow-auto bg-gray-800 p-6">
-            <h3 className="text-2xl font-bold text-green-400 mb-4">
-              {problem?.title || "No Problem Loaded"}
-            </h3>
+        {/* LEFT PANEL */}
+        <aside className="w-[360px] bg-gradient-to-b from-slate-900 to-slate-800 border-r border-white/10 p-6 overflow-y-auto">
+          <h2 className="text-2xl font-semibold text-emerald-400 mb-3">
+            {problem?.title || "Waiting..."}
+          </h2>
 
-            {problem?.companies && problem.companies.length > 0 && (
-              <div className="mb-4">
-                <h4 className="text-sm font-semibold mb-2 text-gray-400 uppercase">Asked in Companies</h4>
-                <div className="flex flex-wrap gap-2">
-                  {problem.companies.map((company, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-blue-900 text-blue-200 rounded-full text-xs font-medium border border-blue-700"
-                    >
-                      {company}
-                    </span>
-                  ))}
+          <p className="text-sm text-gray-300 leading-relaxed mb-6">
+            {problem?.description}
+          </p>
+
+          <h3 className="text-xs uppercase tracking-wider text-gray-400 mb-3">
+            Test Cases
+          </h3>
+
+          <div className="space-y-3">
+            {problem?.testCases?.map((t, i) => (
+              <div
+                key={i}
+                className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm"
+              >
+                <div>
+                  <span className="text-gray-400">Input:</span> {t.input}
+                </div>
+                <div>
+                  <span className="text-gray-400">Expected:</span> {t.expected}
                 </div>
               </div>
-            )}
-
-            <p className="text-gray-300 mb-4 text-base leading-relaxed">
-              {problem?.description || "Waiting for the interviewer to assign a coding problem..."}
-            </p>
-
-            {problem?.example && (
-              <div className="bg-gray-700 p-4 rounded-lg mb-4">
-                <h4 className="text-yellow-300 font-semibold mb-2 text-lg">Example</h4>
-                <pre className="text-sm font-mono text-gray-200 whitespace-pre-wrap">
-                  {problem.example}
-                </pre>
-              </div>
-            )}
-
-            {problem?.testCases && problem.testCases.length > 0 && (
-              <div>
-                <h4 className="text-cyan-300 font-semibold mb-3 text-lg">Test Cases</h4>
-                <ul className="list-disc ml-5 text-gray-300 space-y-1">
-                  {problem.testCases.map((test, idx) => (
-                    <li key={idx} className="text-sm">
-                      <span className="font-medium">Input:</span> {test.input} → <span className="font-medium">Expected:</span> {test.expected}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            ))}
           </div>
+        </aside>
 
-          {/* Code Editor */}
-          <div className="flex-1 flex flex-col">
-            <div className="flex justify-between items-center bg-[#252526] px-4 py-2 border-b border-gray-700">
-              <select
-                className="bg-[#1e1e1e] text-gray-200 px-3 py-1 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-              >
-                <option value="javascript">JavaScript</option>
-                <option value="python">Python</option>
-                <option value="cpp">C++</option>
-              </select>
+        {/* MAIN */}
+        <section className="flex-1 flex flex-col">
+
+          {/* TOP BAR */}
+          <header className="flex items-center justify-between px-6 py-3 bg-gradient-to-r from-slate-900 to-slate-800 border-b border-white/10">
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="bg-slate-900 border border-white/10 rounded-lg px-3 py-1 text-sm"
+            >
+              <option value="javascript">JavaScript</option>
+              <option value="python">Python</option>
+              <option value="cpp">C++</option>
+            </select>
+
+            <div className="flex items-center gap-3">
               <button
                 onClick={handleRun}
                 disabled={loading}
-                className={`px-6 py-2 rounded-lg font-semibold shadow-lg transition ${loading
-                    ? "bg-gray-600 cursor-not-allowed"
-                    : "bg-green-600 hover:bg-green-500 transform hover:scale-105"
-                  }`}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 border border-white/10 text-sm font-medium text-emerald-400 transition"
               >
-                {loading ? "Running..." : "Run Code"}
+                <Play className="w-4 h-4" />
+                Run
               </button>
 
               <button
-                onClick={() => {
-                  const finalUserCode = editorRef.current?.getValue() || null;
-                  onSkip(finalUserCode);
-                }}
-                className="px-4 py-2 ml-2 rounded-lg bg-red-600 hover:bg-red-500 text-white font-semibold"
+                onClick={() => onSkip(editorValue)}
+                className="px-4 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 border border-white/10 text-sm font-medium text-red-400 transition"
               >
                 Skip
               </button>
 
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-md bg-slate-800 hover:bg-slate-700 border border-white/10 text-gray-300"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
+          </header>
 
-            <Editor
-              height="60%"
-              theme="vs-dark"
-              language={language === "cpp" ? "cpp" : language}
-              value={initialEditorValue}
-              onMount={handleEditorDidMount}
-              options={{
-                fontSize: 14,
-                fontFamily: "Consolas, 'Courier New', monospace",
-                minimap: { enabled: false },
-                automaticLayout: true,
-                scrollBeyondLastLine: false,
-                smoothScrolling: true,
-                cursorSmoothCaretAnimation: true,
-                renderWhitespace: "none",
-                lineNumbers: "on",
-                roundedSelection: true,
-                scrollbar: {
-                  verticalScrollbarSize: 10,
-                  horizontalScrollbarSize: 10,
-                },
-              }}
-            />
-
-            {/* Output Console */}
-            <div className="h-40 bg-gray-950 text-white p-4 overflow-auto border-t border-gray-700 font-mono">
-              <h4 className="text-cyan-400 font-bold mb-3 text-xl">Execution Results</h4>
-              {Array.isArray(output) ? (
-                output.map((res, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-3 rounded mb-3 border ${res.id === 0
-                        ? "bg-gray-700 border-gray-600"
-                        : res.passed
-                          ? "bg-green-900 border-green-700"
-                          : "bg-red-900 border-red-700"
-                      }`}
-                  >
-                    {res.id !== 0 ? (
-                      <>
-                        <strong className="text-lg">Test {res.id}:</strong>{" "}
-                        <span
-                          className={`font-bold ${res.passed ? "text-green-300" : "text-red-300"
-                            }`}
-                        >
-                          {res.passed ? "PASSED" : "FAILED"}
-                        </span>
-                        <div className="mt-1 text-sm">
-                          <span className="text-gray-400 block">Input: {res.input}</span>
-                          <span className="text-gray-400 block">Expected: {res.expected}</span>
-                          <span className="text-gray-400 block">
-                            Output: <span className="text-white whitespace-pre-wrap">{res.output}</span>
-                          </span>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="text-white">{res.output}</div>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <pre className="text-red-400">{output}</pre>
-              )}
+          {/* EDITOR */}
+          <div className="px-6 py-4">
+            <div className="h-[45vh] bg-[#1e1e1e] border border-white/10 rounded-xl overflow-hidden shadow-inner">
+              <Editor
+                height="100%"
+                theme="vs-dark"
+                language={language === "cpp" ? "cpp" : language}
+                value={editorValue}
+                onChange={(val) => setEditorValue(val || "")}
+                options={{
+                  fontSize: 15,
+                  minimap: { enabled: false },
+                  automaticLayout: true,
+                }}
+              />
             </div>
           </div>
-        </div>
+
+          {/* OUTPUT */}
+          <div className="px-6 pb-5">
+            <div className="bg-[#0b1220] border border-cyan-500/20 rounded-xl p-4">
+              <h3 className="text-cyan-400 font-semibold mb-3 tracking-wide">
+                ▸ Execution Results
+              </h3>
+
+              {output.map((r, i) => (
+                <div
+                  key={i}
+                  className={`rounded-lg px-4 py-3 text-sm mb-2 ${
+                    r.id === 0
+                      ? "bg-slate-800 border border-white/10"
+                      : r.passed
+                        ? "bg-emerald-500/10 border border-emerald-500/30"
+                        : "bg-red-500/10 border border-red-500/30"
+                  }`}
+                >
+                  {r.id !== 0 ? (
+                    <>
+                      <div className="font-medium mb-1">
+                        Test {r.id} —{" "}
+                        <span
+                          className={
+                            r.passed ? "text-emerald-400" : "text-red-400"
+                          }
+                        >
+                          {r.passed ? "Passed" : "Failed"}
+                        </span>
+                      </div>
+                      <div className="text-gray-300">
+                        Output: {r.output}
+                      </div>
+                    </>
+                  ) : (
+                    r.output
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );
@@ -313,107 +265,186 @@ const SolvedProblemsModal = ({ isOpen, onClose, problems }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-80 z-50 flex p-4">
-      <div className="bg-gray-900 text-white w-full max-w-5xl mx-auto rounded-lg shadow-xl overflow-hidden flex">
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+      <div className="w-full max-w-6xl h-[85vh] rounded-2xl shadow-2xl overflow-hidden flex bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 text-white relative">
 
-        {/* Sidebar list */}
-        <div className="w-1/3 bg-gray-800 border-r border-gray-700 p-4 overflow-y-auto">
-          <h2 className="text-xl font-bold mb-4 text-green-400">Solved Problems</h2>
+        {/* SIDEBAR */}
+        <aside className="w-[340px] bg-gradient-to-b from-slate-900 to-slate-800 border-r border-white/10 p-5 overflow-y-auto">
+          <h2 className="text-lg font-semibold text-emerald-400 mb-4">
+            Solved Problems
+          </h2>
 
           {problems.length === 0 && (
-            <p className="text-gray-400 text-sm">No problems solved yet.</p>
+            <p className="text-sm text-gray-400">
+              No problems solved yet.
+            </p>
           )}
 
-          {problems.map((p, i) => (
-            <button
-              key={i}
-              onClick={() => setSelected(p)}
-              className="w-full text-left p-3 mb-2 bg-gray-700 hover:bg-gray-600 rounded"
-            >
-              {p.problem.title}
-              <p className="text-xs text-gray-400">
-                {new Date(p.solvedAt).toLocaleString()}
-              </p>
-            </button>
-          ))}
-        </div>
+          <div className="space-y-2">
+            {problems.map((p, i) => {
+              const active = selected === p;
+              return (
+                <button
+                  key={i}
+                  onClick={() => setSelected(p)}
+                  className={`w-full text-left px-4 py-3 rounded-lg border transition
+                    ${
+                      active
+                        ? "bg-white/10 border-emerald-500/40"
+                        : "bg-white/5 hover:bg-white/10 border-white/10"
+                    }`}
+                >
+                  <div className="font-medium text-sm">
+                    {p.problem.title}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    {new Date(p.solvedAt).toLocaleString()}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </aside>
 
-        {/* Details Section */}
-        <div className="flex-1 p-6 overflow-y-auto">
+        {/* MAIN CONTENT */}
+        <section className="flex-1 p-6 overflow-y-auto">
           {!selected && (
-            <p className="text-gray-300">Select a solved problem to view details.</p>
+            <div className="h-full flex items-center justify-center text-gray-400">
+              Select a solved problem to view details
+            </div>
           )}
 
           {selected && (
-            <>
-              <h2 className="text-2xl font-bold text-green-400 mb-4">
-                {selected.problem.title}
-              </h2>
-
-              {selected.skipped && (
-                <p className="text-red-400 font-bold mb-3">
-                  This problem was skipped.
-                </p>
-              )}
-
-
-              <p className="text-gray-300 whitespace-pre-line mb-4">
-                {selected.problem.description}
-              </p>
-
-              {/* Read-only editor */}
+            <div className="max-w-4xl">
+              {/* HEADER */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-blue-300 mb-2">
+                <h2 className="text-2xl font-semibold text-emerald-400 mb-2">
+                  {selected.problem.title}
+                </h2>
+
+                {selected.skipped && (
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                    <XCircle className="w-4 h-4" />
+                    Skipped
+                  </div>
+                )}
+              </div>
+
+              {/* DESCRIPTION */}
+              <div className="mb-6 bg-white/5 border border-white/10 rounded-xl p-4">
+                <h3 className="text-xs uppercase tracking-wider text-gray-400 mb-2">
+                  Problem Description
+                </h3>
+                <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
+                  {selected.problem.description}
+                </p>
+              </div>
+
+              {/* SOLUTION */}
+              <div className="mb-8">
+                <h3 className="flex items-center gap-2 text-lg font-semibold text-cyan-400 mb-3">
+                  <Code2 className="w-5 h-5" />
                   Your Solution
                 </h3>
 
                 {selected.skipped ? (
-                  <p className="text-gray-400 italic">No code submitted for this problem.</p>
+                  <p className="text-sm text-gray-400 italic">
+                    No code submitted for this problem.
+                  </p>
                 ) : (
-                  <Editor
-                    height="200px"
-                    language="javascript"
-                    value={selected.userCode}
-                    theme="vs-dark"
-                    options={{ readOnly: true, minimap: { enabled: false } }}
-                  />
+                  <div className="h-[280px] bg-[#1e1e1e] border border-white/10 rounded-xl overflow-hidden shadow-inner">
+                    <Editor
+                      height="100%"
+                      language="javascript"
+                      value={selected.userCode || "// No code submitted"}
+                      theme="vs-dark"
+                      options={{
+                        readOnly: true,
+                        minimap: { enabled: false },
+                        fontSize: 15,
+                        scrollBeyondLastLine: false,
+                        automaticLayout: true,
+                      }}
+                    />
+                  </div>
                 )}
               </div>
 
+              {/* TEST RESULTS */}
+              <div>
+                <h3 className="text-lg font-semibold text-yellow-400 mb-3">
+                  Test Case Results
+                </h3>
 
-              {/* Test results */}
-              <h3 className="text-lg font-semibold text-yellow-300 mb-2">
-                Test Case Results
-              </h3>
+                {selected.skipped ? (
+                  <p className="text-sm text-gray-400 italic">
+                    No test results available.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {selected.testResults.map((r, idx) => (
+                      <div
+                        key={idx}
+                        className={`rounded-lg px-4 py-3 border text-sm
+                          ${
+                            r.passed
+                              ? "bg-emerald-500/10 border-emerald-500/30"
+                              : "bg-red-500/10 border-red-500/30"
+                          }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-medium">
+                            Test Case {idx + 1}
+                          </span>
+                          <span
+                            className={`flex items-center gap-1 text-sm
+                              ${
+                                r.passed
+                                  ? "text-emerald-400"
+                                  : "text-red-400"
+                              }`}
+                          >
+                            {r.passed ? (
+                              <>
+                                <CheckCircle2 className="w-4 h-4" /> Passed
+                              </>
+                            ) : (
+                              <>
+                                <XCircle className="w-4 h-4" /> Failed
+                              </>
+                            )}
+                          </span>
+                        </div>
 
-              {selected.skipped ? (
-                <p className="text-gray-400 italic">No test results available.</p>
-              ) : (
-                selected.testResults.map((r, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-3 mb-2 rounded border ${r.passed
-                        ? "bg-green-900 border-green-600"
-                        : "bg-red-900 border-red-600"
-                      }`}
-                  >
-                    <p><strong>Input:</strong> {r.input}</p>
-                    <p><strong>Expected:</strong> {r.expected}</p>
-                    <p><strong>Output:</strong> {r.output}</p>
-                    <p><strong>Status:</strong> {r.passed ? "Passed ✔" : "Failed ✘"}</p>
+                        <div className="text-gray-300">
+                          <div>
+                            <span className="text-gray-400">Input:</span>{" "}
+                            {r.input}
+                          </div>
+                          <div>
+                            <span className="text-gray-400">Expected:</span>{" "}
+                            {r.expected}
+                          </div>
+                          <div>
+                            <span className="text-gray-400">Output:</span>{" "}
+                            {r.output}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))
-              )}
-
-            </>
+                )}
+              </div>
+            </div>
           )}
-        </div>
+        </section>
 
+        {/* CLOSE */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 bg-gray-700 hover:bg-gray-600 rounded-full"
+          className="absolute top-4 right-4 p-2 rounded-md bg-slate-800 hover:bg-slate-700 border border-white/10"
         >
-          <X className="w-6 h-6" />
+          <X className="w-5 h-5" />
         </button>
       </div>
     </div>
@@ -1590,7 +1621,7 @@ then begin with an appropriate first question (example: "Can you tell me about y
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                {companyType} — {role}
+                {companyType} - {role}
               </h1>
               <p className="text-sm text-gray-600">
                 Live AI-powered mock interview

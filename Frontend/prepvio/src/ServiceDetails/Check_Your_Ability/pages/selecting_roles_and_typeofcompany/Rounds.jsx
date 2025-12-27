@@ -78,7 +78,7 @@ const Rounds = ({ companyType, role }) => {
             <span className="font-semibold text-indigo-600">
               {companyType}
             </span>{" "}
-            —{" "}
+            -{" "}
             <span className="font-semibold text-indigo-600">
               {role}
             </span>
