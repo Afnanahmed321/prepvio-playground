@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 const BASE_URL = "/api";
+const USER_API = "/api";
 
 // --- ANIMATION VARIANTS ---
 const containerVariants = {

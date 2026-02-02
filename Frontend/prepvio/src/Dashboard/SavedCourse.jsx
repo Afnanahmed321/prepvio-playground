@@ -18,6 +18,7 @@ import {
 axios.defaults.withCredentials = true;
 
 const BASE_URL = "/api";
+const USER_API = "/api";
 
 // --- ANIMATION VARIANTS ---
 const containerVariants = {

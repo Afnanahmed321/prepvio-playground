@@ -1715,7 +1715,7 @@ In the meantime, if you have any follow-up questions, please don't hesitate to r
 
       console.log("✅ Uploaded Report URL:", data.publicUrl);
 
-      const sessionId = location.state?.sessionId;
+      // Use the sessionId captured at the start of handleEndInterview
 
       if (sessionId) {
         await fetch(
