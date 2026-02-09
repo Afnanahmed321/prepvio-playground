@@ -70,8 +70,8 @@ const FAQSection = () => {
           </p>
         </div>
 
-        {/* FAQ Accordion */}
-        <div className="max-w-4xl mx-auto relative z-10 space-y-3 sm:space-y-4">
+        {/* MOBILE UI -> Accordion (lg:hidden) */}
+        <div className="lg:hidden max-w-4xl mx-auto relative z-10 space-y-3 sm:space-y-4">
           {faqData.map((item) => (
             <div 
               key={item.id}
@@ -140,7 +140,56 @@ const FAQSection = () => {
             </div>
           ))}
         </div>
+
+        {/* DESKTOP UI -> Marquee (hidden lg:block) */}
+        <div className="hidden lg:block relative flex overflow-x-hidden group z-10">
+          <div className="animate-marquee flex gap-6 items-stretch">
+            {[...faqData, ...faqData].map((item, i) => (
+              <div 
+                key={i}
+                className="bg-white rounded-[2.4rem] p-7 shadow-lg shadow-gray-200/50 flex flex-col gap-5 min-w-[320px] w-[320px] border border-gray-100 hover:scale-[1.03] transition-transform duration-300"
+              >
+                {/* Icon + ID */}
+                <div className="flex justify-between items-center">
+                  <div className="bg-purple-50 p-2.5 rounded-full">
+                    <HelpCircle className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest border border-gray-100 px-2 py-1 rounded-full">
+                    FAQ - {item.id}
+                  </span>
+                </div>
+
+                {/* Question */}
+                <h3 className="text-gray-900 font-black text-xl leading-snug tracking-tight">
+                  {item.q}
+                </h3>
+
+                {/* Divider */}
+                <div className="h-px bg-gray-100" />
+
+                {/* Answer */}
+                <p className="text-gray-600 leading-relaxed text-sm font-medium">
+                  {item.a}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
+
+      {/* Marquee Animation Styles */}
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+          animation: marquee 10s linear infinite;
+        }
+        .group:hover .animate-marquee {
+          animation-play-state: paused;
+        }
+      `}</style>
     </div>
   );
 };

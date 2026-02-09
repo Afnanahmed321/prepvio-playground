@@ -1104,7 +1104,7 @@ const InterviewScreen = ({
     let offscreenCtx;
 
     if (typeof OffscreenCanvas !== 'undefined') {
-      offscreenCanvas = new OffscreenCanvas(80, 60);
+      offscreenCanvas = new OffscreenCanvas(320, 240);
       offscreenCtx = offscreenCanvas.getContext('2d', {
         willReadFrequently: false,
         desynchronized: true,
@@ -1112,8 +1112,8 @@ const InterviewScreen = ({
       });
     } else {
       offscreenCanvas = document.createElement('canvas');
-      offscreenCanvas.width = 80;
-      offscreenCanvas.height = 60;
+      offscreenCanvas.width = 320;
+      offscreenCanvas.height = 240;
       offscreenCtx = offscreenCanvas.getContext('2d', {
         willReadFrequently: false,
         desynchronized: true,
@@ -1137,12 +1137,12 @@ const InterviewScreen = ({
 
       const processFrame = () => {
         try {
-          // Draw tiny resolution for nervousness detection
-          offscreenCtx.drawImage(video, 0, 0, 80, 60);
+          // Draw proper resolution for nervousness detection
+          offscreenCtx.drawImage(video, 0, 0, 320, 240);
 
           const blobPromise = offscreenCanvas.convertToBlob ?
-            offscreenCanvas.convertToBlob({ type: 'image/jpeg', quality: 0.15 }) :
-            new Promise(resolve => offscreenCanvas.toBlob(resolve, 'image/jpeg', 0.15));
+            offscreenCanvas.convertToBlob({ type: 'image/jpeg', quality: 0.4 }) :
+            new Promise(resolve => offscreenCanvas.toBlob(resolve, 'image/jpeg', 0.4));
 
           blobPromise.then(processBlob).catch(err => {
             console.error("Blob creation error:", err);
@@ -1225,7 +1225,7 @@ const InterviewScreen = ({
         setTimeout(processFrame, 0);
       }
 
-    }, 10000); // ✅ 10 seconds - much less frequent to prevent lag
+    }, 1000); // ✅ 1 second - ultra fast for verification
 
     return () => {
       clearInterval(interval);

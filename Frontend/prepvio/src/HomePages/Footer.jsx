@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Twitter, Instagram, Linkedin, MapPin, Mail, Phone, ArrowRight } from "lucide-react";
 import TermsModal from "../components/TermsModal.jsx";
+import TeamModal from "../components/TeamModal.jsx"; // ✅ Import TeamModal
 import { useNavigate } from "react-router-dom";
 
 
@@ -30,6 +31,7 @@ function Footer() {
   const location = useLocation();
   const isHomePage = location.pathname === "/";
   const [openTerms, setOpenTerms] = useState(false);
+  const [openTeam, setOpenTeam] = useState(false); // ✅ Add state for TeamModal
   const navigate = useNavigate();
 
 
@@ -172,86 +174,33 @@ function Footer() {
   }
 
   /* ================================
-      OTHER PAGES → DARK FOOTER
+      OTHER PAGES → SMALL FOOTER (UPDATED LIGHT UI)
      ================================ */
   return (
-    <footer className="w-full bg-gradient-to-b from-black to-gray-900 border-t border-white/10 py-12">
-      <div className="max-w-7xl mx-auto px-6">
-        {/* Main Content */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 mb-8">
+    <footer className="w-full mt-10 relative">
+      <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-white via-white to-transparent pointer-events-none -z-10" />
 
-          {/* BRAND */}
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center overflow-hidden shadow-lg">
-                <img src="/newuilogo4.png" alt="PrepVio Icon" className="w-full h-full object-cover" />
+      <div className="bg-white/80 backdrop-blur-xl border-t border-gray-100/50 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.03)] py-8 rounded-t-[2.5rem]">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-4">
+
+            {/* BRAND */}
+            <div className="flex items-center gap-3 group cursor-default">
+              <div className="w-9 h-9 bg-black rounded-xl flex items-center justify-center overflow-hidden shadow-lg shadow-black/10 transition-transform group-hover:scale-105 duration-500">
+                <img src="/newuilogo1.png" alt="Icon" className="w-full h-full object-cover" />
               </div>
-              <div>
-                <img
-                  src="/prepvio (1).png"
-                  alt="PrepVio"
-                  className="h-7 w-auto object-contain brightness-0 invert"
-                />
+              <div className="block opacity-90 group-hover:opacity-100 transition-opacity">
+                <img src="/prepvio (1).png" alt="PrepVio" className="h-7 w-auto object-contain" />
               </div>
             </div>
-            <p className="text-gray-400 text-sm font-medium max-w-sm leading-relaxed">
-              Master your interview skills with AI-powered practice and feedback.
+
+            {/* COPYRIGHT */}
+            <p className="text-xs font-medium text-gray-400 text-center md:text-left tracking-wide">
+              © 2025 PrepVio. All rights reserved.
             </p>
-          </div>
 
-          {/* QUICK LINKS */}
-          <div className="flex flex-col md:flex-row gap-8 md:gap-12">
-            <div>
-              <h5 className="text-white font-bold text-xs uppercase tracking-wider mb-4">Company</h5>
-              <ul className="space-y-2">
-                <li>
-                  <a href="/#about" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">
-                    About Us
-                  </a>
-                </li>
-                <li>
-                  <a href="/#pricing" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">
-                    Pricing
-                  </a>
-                </li>
-                <li>
-                  <button
-                    onClick={() => setOpenTerms(true)}
-                    className="text-gray-400 hover:text-white transition-colors text-sm font-medium"
-                  >
-                    Terms
-                  </button>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h5 className="text-white font-bold text-xs uppercase tracking-wider mb-4">Contact</h5>
-              <ul className="space-y-2">
-                <li>
-                  <a
-                    href="mailto:prepvio.ai@gmail.com"
-                    className="text-gray-400 hover:text-white transition-colors text-sm font-medium"
-                  >
-                    Email Us
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="tel:+917433877151"
-                    className="text-gray-400 hover:text-white transition-colors text-sm font-medium"
-                  >
-                    Call Us
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* SOCIAL LINKS */}
-          <div>
-            <h5 className="text-white font-bold text-xs uppercase tracking-wider mb-4">Follow Us</h5>
-            <div className="flex gap-3">
+            {/* SOCIAL LINKS */}
+            <div className="flex items-center gap-3">
               {SOCIAL_LINKS.map(({ name, href, Icon }) => (
                 <a
                   key={name}
@@ -259,7 +208,7 @@ function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={name}
-                  className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white/60 hover:bg-white hover:text-black transition-all duration-300 hover:scale-110"
+                  className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-black hover:text-white hover:scale-110 active:scale-95 transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-black/20"
                 >
                   <Icon className="w-4 h-4" />
                 </a>
@@ -267,31 +216,11 @@ function Footer() {
             </div>
           </div>
         </div>
-
-        {/* Bottom Bar */}
-        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-gray-500 font-medium">
-            © 2025 PrepVio. All rights reserved.
-          </p>
-          <div className="flex gap-6 text-xs">
-            <button
-              onClick={() => setOpenTerms(true)}
-              className="text-gray-500 hover:text-white transition-colors font-medium"
-            >
-              Privacy Policy
-            </button>
-            <button
-              onClick={() => setOpenTerms(true)}
-              className="text-gray-500 hover:text-white transition-colors font-medium"
-            >
-              Terms of Service
-            </button>
-          </div>
-        </div>
       </div>
 
-      {/* Modal */}
+      {/* ✅ Adding Modals here too so they work on other pages */}
       <TermsModal isOpen={openTerms} onClose={() => setOpenTerms(false)} />
+      <TeamModal isOpen={openTeam} onClose={() => setOpenTeam(false)} />
     </footer>
   );
 }
