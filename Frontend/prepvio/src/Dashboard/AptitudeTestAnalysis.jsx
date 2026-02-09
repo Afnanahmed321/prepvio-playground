@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
+import MobileDashboardHeader from "../components/MobileDashboardHeader";
+import MobileRestrictionModal from "../components/MobileRestrictionModal"; // ✅ ADD THIS
 
 import {
   Brain,
@@ -550,6 +552,15 @@ const AptitudeTestAnalysis = () => {
   const [reviewMode, setReviewMode] = useState(false);
   const [reviewQuestions, setReviewQuestions] = useState([]);
   const navigate = useNavigate();
+  const { setMobileOpen } = useOutletContext();
+  const [showMobileModal, setShowMobileModal] = useState(false); // ✅ ADD MOBILE MODAL STATE
+
+  // ✅ Check for mobile device on mount
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setShowMobileModal(true);
+    }
+  }, []);
 
 
   // Fetch aptitude attempts from backend
@@ -740,6 +751,14 @@ const AptitudeTestAnalysis = () => {
 
   return (
     <div className="min-h-screen bg-[#FDFBF9] font-sans selection:bg-[#D4F478] selection:text-black p-4 md:p-8 relative overflow-hidden">
+
+      <MobileRestrictionModal
+        isOpen={showMobileModal}
+        onClose={() => setShowMobileModal(false)}
+      />
+
+      {/* Mobile Header */}
+      <MobileDashboardHeader setMobileOpen={setMobileOpen} />
 
       {/* Background decorations */}
       <div className="fixed inset-0 pointer-events-none -z-50">

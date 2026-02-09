@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import axios from "axios";
+import MobileMenuButton from "../components/MobileMenuButton";
+import MobileDashboardHeader from "../components/MobileDashboardHeader";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen,
@@ -524,7 +526,7 @@ const AchievementsModal = ({ courses, onClose }) => {
   // Add milestone achievements
   const completedCount = courses.filter(c => c.completed).length;
   const milestones = [];
-  
+
   if (completedCount >= 10) {
     milestones.push({
       title: 'Master Learner',
@@ -535,7 +537,7 @@ const AchievementsModal = ({ courses, onClose }) => {
       date: 'Achievement unlocked',
     });
   }
-  
+
   if (completedCount >= 5) {
     milestones.push({
       title: 'Learning Enthusiast',
@@ -546,7 +548,7 @@ const AchievementsModal = ({ courses, onClose }) => {
       date: 'Achievement unlocked',
     });
   }
-  
+
   if (completedCount >= 1) {
     milestones.push({
       title: 'First Course Completed',
@@ -665,6 +667,7 @@ const AchievementsModal = ({ courses, onClose }) => {
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { user, refreshUser } = useAuthStore();
+  const { setMobileOpen } = useOutletContext();
   const [greeting, setGreeting] = useState("");
   const [quote, setQuote] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -883,10 +886,14 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#FDFBF9] font-sans selection:bg-[#D4F478] selection:text-black pb-10">
 
-      {/* Navbar - Sticky */}
-      <nav className="sticky top-0 z-50 bg-[#FDFBF9]/80 backdrop-blur-md border-b border-gray-100 px-4 md:px-6 py-4">
+      {/* Mobile Header */}
+      <MobileDashboardHeader setMobileOpen={setMobileOpen} />
+
+      {/* Navbar - Sticky (Desktop Only) */}
+      <nav className="hidden md:block sticky top-0 z-50 bg-[#FDFBF9]/80 backdrop-blur-md border-b border-gray-100 px-4 md:px-6 py-4">
         <div className="max-w-[1600px] mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
+            <MobileMenuButton onClick={() => setMobileOpen(true)} />
             <div className="w-10 h-10 bg-[#1A1A1A] rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-black/10">
               P
             </div>
@@ -1046,11 +1053,11 @@ export default function DashboardPage() {
                   )}
                 </div>
                 <button
-  onClick={() => setShowAchievements(true)}
-  className="w-full mt-6 py-3 bg-[#D4F478] text-black font-bold rounded-xl text-sm hover:bg-white transition-colors"
->
-  View All Achievements
-</button>
+                  onClick={() => setShowAchievements(true)}
+                  className="w-full mt-6 py-3 bg-[#D4F478] text-black font-bold rounded-xl text-sm hover:bg-white transition-colors"
+                >
+                  View All Achievements
+                </button>
               </div>
             </motion.div>
 

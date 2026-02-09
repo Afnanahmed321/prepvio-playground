@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
+import MobileDashboardHeader from "../components/MobileDashboardHeader";
+import MobileRestrictionModal from "../components/MobileRestrictionModal"; // ✅ ADD THIS
 
 import {
   FileText,
@@ -236,6 +238,15 @@ const InterviewAnalysisPage = () => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const { setMobileOpen } = useOutletContext();
+  const [showMobileModal, setShowMobileModal] = useState(false); // ✅ ADD MOBILE MODAL STATE
+
+  // ✅ Check for mobile device on mount
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setShowMobileModal(true);
+    }
+  }, []);
 
 
   // Fetch interviews from backend
@@ -365,6 +376,9 @@ const InterviewAnalysisPage = () => {
   return (
     <div className="min-h-screen bg-[#FDFBF9] font-sans selection:bg-[#D4F478] selection:text-black p-4 md:p-8 relative overflow-hidden">
       
+      {/* Mobile Header */}
+      <MobileDashboardHeader setMobileOpen={setMobileOpen} />
+
       {/* Background decorations */}
       <div className="fixed inset-0 pointer-events-none -z-50">
         <div className="absolute top-[-10%] right-[-5%] w-[60vw] h-[60vw] bg-gradient-to-b from-blue-50 to-transparent rounded-full blur-[120px] opacity-60" />
@@ -599,6 +613,11 @@ const InterviewAnalysisPage = () => {
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
         featureName="Interview Replay"
+      />
+
+      <MobileRestrictionModal
+        isOpen={showMobileModal}
+        onClose={() => setShowMobileModal(false)}
       />
 
     </div>

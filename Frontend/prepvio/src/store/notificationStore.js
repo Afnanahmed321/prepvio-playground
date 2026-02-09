@@ -130,14 +130,17 @@ export const useNotificationStore = create((set) => ({
       }
 
       // ⛔ Prevent duplicates by Content (type, message, title)
-      const isDuplicateContent = state.notifications.some(n =>
-        n.type === notification.type &&
-        n.title === notification.title &&
-        n.message === notification.message
-      );
+      // EXCEPT for system notifications like ticket updates
+      if (notification.type !== 'system') {
+        const isDuplicateContent = state.notifications.some(n =>
+          n.type === notification.type &&
+          n.title === notification.title &&
+          n.message === notification.message
+        );
 
-      if (isDuplicateContent) {
-        return state;
+        if (isDuplicateContent) {
+          return state;
+        }
       }
 
       return {

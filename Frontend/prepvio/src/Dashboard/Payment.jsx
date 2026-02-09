@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useOutletContext } from "react-router-dom";
 import axios from "axios";
 import { jsPDF } from "jspdf";
+import MobileDashboardHeader from "../components/MobileDashboardHeader";
 import {
   Check,
   X,
@@ -120,6 +122,7 @@ function Payment() {
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const { user, refreshUser } = useAuthStore();
+  const { setMobileOpen } = useOutletContext();
 
   // ✅ Fetch current subscription
   useEffect(() => {
@@ -430,6 +433,9 @@ function Payment() {
   // Original pricing page
   return (
     <div className="min-h-screen bg-[#FDFBF9] font-sans selection:bg-[#D4F478] selection:text-black relative overflow-hidden">
+
+      {/* Mobile Header */}
+      <MobileDashboardHeader setMobileOpen={setMobileOpen} />
 
       {/* --- BACKGROUND DECORATION --- */}
       <div className="fixed inset-0 pointer-events-none -z-10">

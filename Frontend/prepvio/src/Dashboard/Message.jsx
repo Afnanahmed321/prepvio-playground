@@ -11,6 +11,8 @@ import {
   Video
 } from "lucide-react";
 import axios from "axios";
+import { useOutletContext } from "react-router-dom";
+import MobileDashboardHeader from "../components/MobileDashboardHeader";
 import socket from "../socket";
 
 // --- ANIMATION VARIANTS ---
@@ -29,6 +31,7 @@ function Message() {
   const [loading, setLoading] = useState(true);
   const [newMessageText, setNewMessageText] = useState("");
   const messagesEndRef = useRef(null);
+  const { setMobileOpen } = useOutletContext();
 
   // Fetch initial messages
   useEffect(() => {
@@ -96,10 +99,13 @@ function Message() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF9] font-sans selection:bg-[#D4F478] selection:text-black flex flex-col p-4 md:p-6 lg:p-8 h-screen overflow-hidden">
+    <div className="min-h-screen bg-[#FDFBF9] font-sans selection:bg-[#D4F478] selection:text-black flex flex-col h-screen overflow-hidden">
       
-      {/* Container */}
-      <div className="flex-1 w-full max-w-[1200px] mx-auto bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 flex flex-col overflow-hidden relative">
+      {/* Mobile Header */}
+      <MobileDashboardHeader setMobileOpen={setMobileOpen} />
+
+      {/* Container - added padding and adjusted for mobile header */}
+      <div className="flex-1 w-full max-w-[1200px] mx-auto bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 flex flex-col overflow-hidden relative p-4 md:p-6 lg:p-8">
         
         {/* --- HEADER --- */}
         <div className="px-6 py-4 md:px-8 md:py-6 border-b border-gray-100 flex items-center justify-between bg-white/80 backdrop-blur-md z-10">

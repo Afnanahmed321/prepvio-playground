@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
+import { useOutletContext } from "react-router-dom";
+import MobileDashboardHeader from "../components/MobileDashboardHeader";
 import {
   Settings, User, Mail, Phone, MapPin, Globe, Briefcase, Save,
   Camera, ExternalLink, ArrowLeft, Sparkles, Cpu, MessageSquare,
@@ -299,6 +301,7 @@ const ProjectModal = ({ isOpen, onClose, onSave, editingProject }) => {
 
 // --- VIEW: ACCOUNT SETTINGS (EXACTLY AS PROVIDED) ---
 function AccountView({ onNavigate }) {
+  const { setMobileOpen } = useOutletContext();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -437,99 +440,107 @@ function AccountView({ onNavigate }) {
   }
 
   return (
-    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-5xl mx-auto space-y-8">
-      <motion.div variants={itemUpVariants}>
-        <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Account Settings</h1>
-        <p className="text-gray-500 font-medium mt-2">Manage your personal information and preferences.</p>
-      </motion.div>
+    <>
+      {/* Mobile Header */}
+      <MobileDashboardHeader setMobileOpen={setMobileOpen} />
 
-      <motion.div variants={itemUpVariants} className="w-full bg-[#1A1A1A] rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden shadow-2xl shadow-gray-200 flex flex-col md:flex-row items-center gap-8 md:gap-12">
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full blur-[100px] opacity-30 pointer-events-none" />
-        <div className="relative group shrink-0">
-          <div className="w-32 h-32 md:w-40 md:h-40 rounded-full p-1 bg-gradient-to-br from-white/20 to-white/5 border border-white/10 shadow-2xl">
-            <img
-              src={user?.profilePic || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(formData.firstName + ' ' + formData.lastName)}`}
-              alt="Profile"
-              className="w-full h-full object-cover rounded-full"
+      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="max-w-5xl mx-auto space-y-8 p-4 md:p-8">
+        <motion.div variants={itemUpVariants} className="flex items-center gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Account Settings</h1>
+            <p className="text-gray-500 font-medium mt-2">Manage your personal information and preferences.</p>
+          </div>
+        </motion.div>
+
+        <motion.div variants={itemUpVariants} className="w-full bg-[#1A1A1A] rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden shadow-2xl shadow-gray-200 flex flex-col md:flex-row items-center gap-8 md:gap-12">
+          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full blur-[100px] opacity-30 pointer-events-none" />
+          <div className="relative group shrink-0">
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-full p-1 bg-gradient-to-br from-white/20 to-white/5 border border-white/10 shadow-2xl">
+              <img
+                src={user?.profilePic || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(formData.firstName + ' ' + formData.lastName)}`}
+                alt="Profile"
+                className="w-full h-full object-cover rounded-full"
+              />
+            </div>
+            <button
+              onClick={handleCameraClick}
+              disabled={uploading}
+              className="absolute bottom-2 right-2 bg-[#D4F478] text-black p-2.5 rounded-full shadow-lg hover:scale-110 transition-transform cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Camera className="w-5 h-5" />
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleProfilePicChange}
+              className="hidden"
             />
           </div>
-          <button
-            onClick={handleCameraClick}
-            disabled={uploading}
-            className="absolute bottom-2 right-2 bg-[#D4F478] text-black p-2.5 rounded-full shadow-lg hover:scale-110 transition-transform cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Camera className="w-5 h-5" />
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleProfilePicChange}
-            className="hidden"
-          />
-        </div>
-        <div className="flex flex-col items-center md:items-start text-center md:text-left relative z-10 flex-1">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold mb-3 border border-white/10 text-[#D4F478]">
-            <Briefcase className="w-3 h-3" /> Software Intern
-          </div>
-          <h2 className="text-3xl md:text-4xl font-black text-white mb-2">{formData.firstName} {formData.lastName}</h2>
-          <p className="text-gray-400 max-w-md text-lg leading-relaxed mb-6">{formData.bio || "Passionate about coding and building modern web apps. Ready to tackle the next big challenge."}</p>
-          <div className="flex flex-wrap justify-center md:justify-start gap-4">
-            <button className="bg-white/10 backdrop-blur-md border border-white/10 text-white font-bold px-6 py-3 rounded-xl hover:bg-white hover:text-black transition-all duration-300 flex items-center gap-2 cursor-pointer"><Settings className="w-4 h-4" /> Preferences</button>
-            <button onClick={onNavigate} className="bg-[#D4F478] text-black font-bold px-6 py-3 rounded-xl hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(212,244,120,0.3)] flex items-center gap-2 cursor-pointer"><ExternalLink className="w-4 h-4" /> View Portfolio</button>
-          </div>
-        </div>
-      </motion.div>
-
-      <motion.div variants={itemUpVariants} className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-gray-100">
-        <div className="flex items-center gap-3 mb-8 border-b border-gray-100 pb-6">
-          <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-900"><User className="w-5 h-5" /></div>
-          <div><h3 className="text-xl font-bold text-gray-900">Personal Details</h3><p className="text-sm text-gray-500 font-medium">Update your identity information</p></div>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <InputGroup label="First Name" icon={User} name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Enter your first name" />
-            <InputGroup label="Last Name" icon={User} name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Enter your last name" />
-            <InputGroup label="Email Address" icon={Mail} type="email" name="email" value={formData.email} disabled={true} placeholder="swaroop@email.com" />
-            <InputGroup label="Phone Number" icon={Phone} type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+91 98765 43210" />
-            <InputGroup label="City" icon={MapPin} name="city" value={formData.city} onChange={handleChange} placeholder="Enter your city" />
-            <InputGroup label="State" icon={Globe} name="state" value={formData.state} onChange={handleChange} placeholder="Enter your state" />
-            <InputGroup label="Pin Code" icon={MapPin} name="pincode" value={formData.pincode} onChange={handleChange} placeholder="Enter pincode" />
-            <InputGroup label="Country" icon={Globe} name="country" value={formData.country} onChange={handleChange} placeholder="India" />
-            <div className="md:col-span-2 space-y-2">
-              <label className="text-sm font-bold text-gray-900 ml-1">Bio</label>
-              <textarea name="bio" rows={4} value={formData.bio} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 focus:border-gray-400 focus:ring-4 focus:ring-gray-100 rounded-xl p-4 outline-none transition-all placeholder:text-gray-400 font-medium text-gray-800 resize-none" placeholder="Tell us a little about yourself..." />
+          <div className="flex flex-col items-center md:items-start text-center md:text-left relative z-10 flex-1">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold mb-3 border border-white/10 text-[#D4F478]">
+              <Briefcase className="w-3 h-3" /> Software Intern
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-white mb-2">{formData.firstName} {formData.lastName}</h2>
+            <p className="text-gray-400 max-w-md text-lg leading-relaxed mb-6">{formData.bio || "Passionate about coding and building modern web apps. Ready to tackle the next big challenge."}</p>
+            <div className="flex flex-wrap justify-center md:justify-start gap-4">
+              <button className="bg-white/10 backdrop-blur-md border border-white/10 text-white font-bold px-6 py-3 rounded-xl hover:bg-white hover:text-black transition-all duration-300 flex items-center gap-2 cursor-pointer"><Settings className="w-4 h-4" /> Preferences</button>
+              <button onClick={onNavigate} className="bg-[#D4F478] text-black font-bold px-6 py-3 rounded-xl hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(212,244,120,0.3)] flex items-center gap-2 cursor-pointer"><ExternalLink className="w-4 h-4" /> View Portfolio</button>
             </div>
           </div>
-          <div className="pt-6 border-t border-gray-100 flex justify-end">
-            <button
-              type="submit"
-              disabled={saving}
-              className={`bg-[#1A1A1A] text-white px-8 py-4 rounded-xl font-bold flex items-center gap-3 transition-all shadow-xl shadow-gray-200 cursor-pointer ${saving
-                ? 'opacity-50 cursor-not-allowed'
-                : 'hover:bg-black hover:scale-105'
-                }`}
-            >
-              {saving ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-5 h-5" /> Save Changes
-                </>
-              )}
-            </button>
+        </motion.div>
+
+        <motion.div variants={itemUpVariants} className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-sm border border-gray-100">
+          <div className="flex items-center gap-3 mb-8 border-b border-gray-100 pb-6">
+            <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-900"><User className="w-5 h-5" /></div>
+            <div><h3 className="text-xl font-bold text-gray-900">Personal Details</h3><p className="text-sm text-gray-500 font-medium">Update your identity information</p></div>
           </div>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <InputGroup label="First Name" icon={User} name="firstName" value={formData.firstName} onChange={handleChange} placeholder="Enter your first name" />
+              <InputGroup label="Last Name" icon={User} name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Enter your last name" />
+              <InputGroup label="Email Address" icon={Mail} type="email" name="email" value={formData.email} disabled={true} placeholder="swaroop@email.com" />
+              <InputGroup label="Phone Number" icon={Phone} type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+91 98765 43210" />
+              <InputGroup label="City" icon={MapPin} name="city" value={formData.city} onChange={handleChange} placeholder="Enter your city" />
+              <InputGroup label="State" icon={Globe} name="state" value={formData.state} onChange={handleChange} placeholder="Enter your state" />
+              <InputGroup label="Pin Code" icon={MapPin} name="pincode" value={formData.pincode} onChange={handleChange} placeholder="Enter pincode" />
+              <InputGroup label="Country" icon={Globe} name="country" value={formData.country} onChange={handleChange} placeholder="India" />
+              <div className="md:col-span-2 space-y-2">
+                <label className="text-sm font-bold text-gray-900 ml-1">Bio</label>
+                <textarea name="bio" rows={4} value={formData.bio} onChange={handleChange} className="w-full bg-gray-50 border border-gray-200 focus:border-gray-400 focus:ring-4 focus:ring-gray-100 rounded-xl p-4 outline-none transition-all placeholder:text-gray-400 font-medium text-gray-800 resize-none" placeholder="Tell us a little about yourself..." />
+              </div>
+            </div>
+            <div className="pt-6 border-t border-gray-100 flex justify-end">
+              <button
+                type="submit"
+                disabled={saving}
+                className={`bg-[#1A1A1A] text-white px-8 py-4 rounded-xl font-bold flex items-center gap-3 transition-all shadow-xl shadow-gray-200 cursor-pointer ${saving
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:bg-black hover:scale-105'
+                  }`}
+              >
+                {saving ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-5 h-5" /> Save Changes
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </motion.div>
       </motion.div>
-    </motion.div>
+    </>
   );
 }
 
 // --- VIEW: PORTFOLIO (✅ WITH PROJECT MANAGEMENT + FIXED SKILL DEDUPLICATION) ---
 function PortfolioView({ onBack }) {
+  const { setMobileOpen } = useOutletContext();
   const [view, setView] = useState("creator");
   const [portfolio, setPortfolio] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -655,10 +666,13 @@ function PortfolioView({ onBack }) {
 
   return (
     <>
+      {/* Mobile Header */}
+      <MobileDashboardHeader setMobileOpen={setMobileOpen} />
+
       <motion.div initial="initial" animate="animate" exit="exit" variants={pageTransition} className="min-h-screen bg-[#FDFBF9] font-sans px-4 py-6 md:p-8 pb-20 overflow-x-hidden">
         <div className="max-w-6xl mx-auto mb-8 md:mb-12">
           <div className="flex flex-col gap-6 md:grid md:grid-cols-3 md:items-center">
-            <div className="flex justify-start order-1">
+            <div className="flex justify-start order-1 gap-3">
               <button onClick={onBack} className="inline-flex items-center gap-3 text-gray-600 hover:text-black font-black transition-all group bg-white px-5 py-2.5 rounded-full border border-gray-100 shadow-sm hover:shadow-md hover:scale-105 active:scale-95">
                 <div className="p-1.5 bg-gray-100 rounded-full group-hover:bg-black group-hover:text-white transition-all"><ArrowLeft className="w-4 h-4" /></div>
                 <span className="text-sm">Back to Settings</span>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import {
   BookOpen,
   Heart,
@@ -14,6 +14,7 @@ import {
   Play,
   Clock
 } from 'lucide-react';
+import MobileDashboardHeader from '../components/MobileDashboardHeader';
 
 axios.defaults.withCredentials = true;
 
@@ -36,6 +37,7 @@ const itemVariants = {
 
 const SavedCoursesPage = () => {
   const navigate = useNavigate();
+  const { setMobileOpen } = useOutletContext();
   const [savedCourses, setSavedCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('grid');
@@ -107,9 +109,11 @@ const SavedCoursesPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFBF9] font-sans selection:bg-[#D4F478] selection:text-black p-4 md:p-8">
+    <div className="min-h-screen bg-[#FDFBF9] font-sans selection:bg-[#D4F478] selection:text-black">
+      {/* Mobile Header */}
+      <MobileDashboardHeader setMobileOpen={setMobileOpen} />
 
-      <div className="max-w-[1600px] mx-auto space-y-8">
+      <div className="max-w-[1600px] mx-auto space-y-8 p-4 md:p-8">
 
         {/* Header Section */}
         <motion.div

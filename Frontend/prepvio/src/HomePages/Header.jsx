@@ -1,10 +1,10 @@
 // src/components/Header.js
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authstore";
 import { Link as ScrollLink } from "react-scroll";
-import { DashboardModal } from "../Dashboard/DashBoardPage";
 import { motion, AnimatePresence } from "framer-motion";
+import { DashboardModal } from "../Dashboard/DashBoardPage";
 import socket from "../socket";
 import { useNotificationStore } from "../store/notificationStore";
 

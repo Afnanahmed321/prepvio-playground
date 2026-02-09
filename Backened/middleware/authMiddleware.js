@@ -3,10 +3,11 @@ import { User } from "../Models/User.js";
 
 export const verifyToken = async (req, res, next) => {
   try {
-    let token = req.cookies?.token;
+    // 1️⃣ CHECK MULTIPLE COOKIE NAMES
+    let token = req.cookies?.token || req.cookies?.user_token || req.cookies?.admin_token || req.cookies?.user_auth_token;
 
-    // Check Authorization header if no cookie
-    if (!token && req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+    // 2️⃣ CHECK AUTHORIZATION HEADER
+    if (!token && req.headers.authorization?.startsWith("Bearer")) {
       token = req.headers.authorization.split(" ")[1];
     }
 
@@ -26,6 +27,21 @@ export const verifyToken = async (req, res, next) => {
       });
     }
 
+    // 3️⃣ HANDLE HARDCODED ADMIN
+    if (decoded.id === "admin") {
+      req.user = {
+        _id: "admin",
+        id: "admin",
+        email: process.env.ADMIN_EMAIL,
+        name: "Admin",
+        role: "admin",
+        isAdmin: true
+      };
+      req.userId = "admin";
+      return next();
+    }
+
+    // 4️⃣ FETCH USER FROM DB
     const user = await User.findById(decoded.id).select("-password");
 
     if (!user) {
@@ -36,6 +52,7 @@ export const verifyToken = async (req, res, next) => {
     }
 
     req.user = user;
+    req.userId = user._id; // Set for consistency across different middlewares
     next();
   } catch (error) {
     console.error("verifyToken error:", error.message);

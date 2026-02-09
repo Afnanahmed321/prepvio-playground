@@ -1,12 +1,14 @@
-import React from "react";
-import { HelpCircle, Sparkles } from "lucide-react";
+import React, { useState } from "react";
+import { HelpCircle, Sparkles, Plus, Minus } from "lucide-react";
 
 const FAQSection = () => {
+  const [openId, setOpenId] = useState(null);
+
   const faqData = [
     { 
       id: 1, 
       q: "How does the AI analyze my performance?", 
-      a: "Our AI tracks signals which includs speech clarity, body language, eye contact, nervous cues, and answer quality to give you comprehensive feedback on both what you say and how you say it." 
+      a: "Our AI tracks signals which includes speech clarity, body language, eye contact, nervous cues, and answer quality to give you comprehensive feedback on both what you say and how you say it." 
     },
     { 
       id: 2, 
@@ -16,7 +18,7 @@ const FAQSection = () => {
     { 
       id: 3, 
       q: "Is my interview data private?", 
-      a: "Yes. All recordings are and never shared. You control your data view, download, or delete anytime. We never share your practice sessions with third parties."
+      a: "Yes. All recordings are encrypted and never shared. You control your data—view, download, or delete anytime. We never share your practice sessions with third parties."
     },
     { 
       id: 4, 
@@ -35,87 +37,110 @@ const FAQSection = () => {
     },
   ];
 
+  const toggleFAQ = (id) => {
+    setOpenId(openId === id ? null : id);
+  };
+
   return (
-    <div className="max-w-[1600px] mx-auto px-6 py-14">
-      <div className="bg-[#EAE6F5] rounded-[3.5rem] p-10 md:p-16 relative overflow-hidden">
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      <div className="bg-[#EAE6F5] rounded-3xl sm:rounded-[3.5rem] p-6 sm:p-10 md:p-16 relative overflow-hidden">
 
         {/* Background Blob */}
-        <div className="absolute top-0 right-0 w-[520px] h-[520px] bg-purple-200/50 rounded-full blur-[110px] pointer-events-none" />
+        <div className="absolute top-0 right-0 w-[320px] sm:w-[520px] h-[320px] sm:h-[520px] bg-purple-200/50 rounded-full blur-[110px] pointer-events-none" />
 
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16 relative z-10">
+        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-16 relative z-10">
 
-          {/* Sparkles Badge (FROM NEW UI) */}
-          <div className="inline-flex items-center gap-2 bg-white border border-gray-100 px-4 py-2 rounded-full shadow-sm mb-6">
-            <Sparkles className="w-4 h-4 text-[#D4F478] fill-[#D4F478]" />
-            <span className="text-xs font-black uppercase tracking-widest text-gray-500">
+          {/* Sparkles Badge */}
+          <div className="inline-flex items-center gap-2 bg-white border border-gray-100 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-sm mb-4 sm:mb-6">
+            <Sparkles className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-[#D4F478] fill-[#D4F478]" />
+            <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-500">
               The Knowledge Hub
             </span>
           </div>
 
           {/* Heading */}
-          <h2 className="text-5xl md:text-6xl font-black tracking-tight text-gray-900 mb-4">
+          <h2 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-gray-900 mb-3 sm:mb-4">
             Everything <span className="text-gray-400 italic">Answered.</span>
           </h2>
 
           {/* Subtext */}
-          <p className="text-gray-600 text-lg leading-relaxed">
+          <p className="text-gray-600 text-base sm:text-lg leading-relaxed px-4 sm:px-0">
             Clear, honest answers to the most important questions about our AI-powered interview platform.
           </p>
         </div>
 
-        {/* Marquee */}
-        <div className="relative flex overflow-x-hidden group z-10">
-          <div className="animate-marquee flex gap-6 items-stretch">
-
-            {[...faqData, ...faqData].map((item, i) => (
-              <div 
-                key={i}
-                className="bg-white rounded-[2.4rem] p-7 shadow-lg shadow-gray-200/50 flex flex-col gap-5 min-w-[320px] w-[320px] border border-gray-100 hover:scale-[1.03] transition-transform duration-300"
+        {/* FAQ Accordion */}
+        <div className="max-w-4xl mx-auto relative z-10 space-y-3 sm:space-y-4">
+          {faqData.map((item) => (
+            <div 
+              key={item.id}
+              className="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-lg shadow-gray-200/50 overflow-hidden transition-all duration-300 hover:shadow-xl"
+            >
+              {/* Question Header - Clickable */}
+              <button
+                onClick={() => toggleFAQ(item.id)}
+                className="w-full flex items-center justify-between p-5 sm:p-7 text-left group"
               >
-
-                {/* Icon + ID */}
-                <div className="flex justify-between items-center">
-                  <div className="bg-purple-50 p-2.5 rounded-full">
-                    <HelpCircle className="w-5 h-5 text-purple-600" />
+                <div className="flex items-start gap-3 sm:gap-4 flex-1">
+                  {/* Icon */}
+                  <div className="bg-purple-50 p-2 sm:p-2.5 rounded-full mt-0.5 flex-shrink-0 group-hover:bg-purple-100 transition-colors">
+                    <HelpCircle className="w-4 sm:w-5 h-4 sm:h-5 text-purple-600" />
                   </div>
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest border border-gray-100 px-2 py-1 rounded-full">
-                    FAQ - {item.id}
-                  </span>
+                  
+                  {/* Question */}
+                  <div className="flex-1">
+                    <h3 className="text-gray-900 font-black text-base sm:text-xl leading-snug tracking-tight pr-4">
+                      {item.q}
+                    </h3>
+                  </div>
                 </div>
 
-                {/* Question */}
-                <h3 className="text-gray-900 font-black text-xl leading-snug tracking-tight">
-                  {item.q}
-                </h3>
+                {/* Expand/Collapse Icon */}
+                <div className="flex-shrink-0 ml-2">
+                  {openId === item.id ? (
+                    <Minus className="w-5 sm:w-6 h-5 sm:h-6 text-purple-600 transition-transform duration-300" />
+                  ) : (
+                    <Plus className="w-5 sm:w-6 h-5 sm:h-6 text-gray-400 group-hover:text-purple-600 transition-all duration-300" />
+                  )}
+                </div>
+              </button>
 
-                {/* Divider */}
-                <div className="h-px bg-gray-100" />
+              {/* Answer - Expandable */}
+              <div 
+                className={`transition-all duration-300 ease-in-out ${
+                  openId === item.id 
+                    ? 'max-h-96 opacity-100' 
+                    : 'max-h-0 opacity-0'
+                }`}
+              >
+                <div className="px-5 sm:px-7 pb-5 sm:pb-7">
+                  {/* Divider */}
+                  <div className="h-px bg-gray-100 mb-4 sm:mb-5" />
+                  
+                  {/* Answer Text */}
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    {/* Spacer to align with question */}
+                    <div className="w-8 sm:w-9 flex-shrink-0" />
+                    
+                    <p className="text-gray-600 leading-relaxed text-sm sm:text-base font-medium">
+                      {item.a}
+                    </p>
+                  </div>
 
-                {/* Answer */}
-                <p className="text-gray-600 leading-relaxed text-sm font-medium">
-                  {item.a}
-                </p>
+                  {/* FAQ ID Badge */}
+                  <div className="flex items-start gap-3 sm:gap-4 mt-4">
+                    <div className="w-8 sm:w-9 flex-shrink-0" />
+                    <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest border border-gray-100 px-2 py-1 rounded-full">
+                      FAQ - {item.id}
+                    </span>
+                  </div>
+                </div>
               </div>
-            ))}
-
-          </div>
+            </div>
+          ))}
         </div>
       </div>
-
-      {/* Marquee Animation */}
-      <style>{`
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee {
-          animation: marquee 40s linear infinite;
-        }
-        .group:hover .animate-marquee {
-          animation-play-state: paused;
-        }
-      `}</style>
     </div>
   );
 };

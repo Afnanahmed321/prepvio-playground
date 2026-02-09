@@ -6,8 +6,9 @@ import {
     ArrowRight, ExternalLink, FileText, Send, Sparkles
 } from "lucide-react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { useAuthStore } from "../store/authstore";
+import MobileDashboardHeader from "../components/MobileDashboardHeader";
 
 // ==========================================
 // 1. DATA SOURCE
@@ -767,6 +768,7 @@ export default function ProjectLearningMap() {
     const [completedCourses, setCompletedCourses] = useState([]);
     const navigate = useNavigate();
     const { user } = useAuthStore();
+    const { setMobileOpen } = useOutletContext();
 
     // Check if user has premium access (Pro Access or Premium Plan)
     const hasPremiumAccess = () => {
@@ -949,164 +951,170 @@ export default function ProjectLearningMap() {
     const getProject = (index) => projects[index];
 
     return (
-        <div className="min-h-screen bg-[#FDFBF9] p-4 md:p-8 font-sans relative selection:bg-[#D4F478] selection:text-black">
-            <StatsHeader
-                xp={userStats.totalXP}
-                level={userStats.currentLevel}
-                streak={userStats.streak}
-                totalLevels={selectedCourse?.totalLevels || projects.length}
-            />
+        <div className="min-h-screen bg-[#FDFBF9] font-sans text-gray-900 selection:bg-[#D4F478] selection:text-black">
+            {/* Mobile Header */}
+            <MobileDashboardHeader setMobileOpen={setMobileOpen} />
 
-            <div className="w-full max-w-5xl mx-auto mb-8 flex flex-col md:flex-row gap-4 items-stretch">
-                {/* Overall Progress Container */}
-                <div className="flex-[2] bg-white/80 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-white/60 flex flex-col justify-center">
-                    <div className="flex justify-between items-center mb-2 px-2">
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Project Journey Progress</span>
-                        <span className="text-sm font-black text-gray-900">
-                            {Math.round(((selectedCourse?.totalLevels || projects.length) > 0 ? ((userStats.currentLevel - 1) / (selectedCourse?.totalLevels || projects.length)) * 100 : 0))}%
-                        </span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${(selectedCourse?.totalLevels || projects.length) > 0 ? ((userStats.currentLevel - 1) / (selectedCourse?.totalLevels || projects.length)) * 100 : 0}%` }}
-                            className="h-full bg-black relative"
-                        />
-                    </div>
-                </div>
-
-                {/* Course Selector Container */}
-
-                <div className="flex-1 relative z-10">
-                    <CourseSelector
-                        courses={courses}
-                        selectedCourse={selectedCourse}
-                        onSelectCourse={handleCourseSelect}
-                        completedCourses={completedCourses}
-                    />
-                </div>
-            </div>
-
-            {!isProjectMapUnlocked() ? (
-                <LockedCourseState
-                    courseName={selectedCourse?.name || "this course"}
-                    courseSlug={selectedCourse?.slug}
-                    onNavigateToCourse={() => navigate(`/services/learn--perform/${selectedCourse._id}`)}
+            <div className="max-w-[1600px] mx-auto p-4 md:p-8 space-y-8">
+                <StatsHeader
+                    xp={userStats.totalXP}
+                    level={userStats.currentLevel}
+                    streak={userStats.streak}
+                    totalLevels={selectedCourse?.totalLevels || projects.length}
                 />
-            ) : (
-                <>
-                    <motion.div
-                        initial={{ opacity: 0, y: 15 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, ease: "easeOut" }}
-                        className="w-full max-w-5xl mx-auto bg-white rounded-[2.5rem] p-8 md:p-12 border border-gray-100 shadow-xl relative will-change-transform"
-                    >
-                        <div className="text-center mb-12">
-                            <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-3 tracking-tight">
-                                {userStats.currentLevel <= projects.length
-                                    ? `Level ${userStats.currentLevel}: ${projects[userStats.currentLevel - 1]?.title}`
-                                    : "Journey Completed! 🏆"
-                                }
-                            </h1>
-                            <p className="text-gray-500 text-lg font-medium">
-                                {userStats.currentLevel > projects.length
-                                    ? levelMessages[levelMessages.length - 1]
-                                    : userStats.currentLevel === projects.length && projects.length > 1
-                                        ? levelMessages[32 - 25] // "Final Boss time!"
-                                        : levelMessages[userStats.currentLevel - 1] || levelMessages[0]}
-                            </p>
+
+                <div className="w-full max-w-5xl mx-auto mb-8 flex flex-col md:flex-row gap-4 items-stretch">
+                    {/* Overall Progress Container */}
+                    <div className="flex-[2] bg-white/80 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-white/60 flex flex-col justify-center">
+                        <div className="flex justify-between items-center mb-2 px-2">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Project Journey Progress</span>
+                            <span className="text-sm font-black text-gray-900">
+                                {Math.round(((selectedCourse?.totalLevels || projects.length) > 0 ? ((userStats.currentLevel - 1) / (selectedCourse?.totalLevels || projects.length)) * 100 : 0))}%
+                            </span>
                         </div>
+                        <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${(selectedCourse?.totalLevels || projects.length) > 0 ? ((userStats.currentLevel - 1) / (selectedCourse?.totalLevels || projects.length)) * 100 : 0}%` }}
+                                className="h-full bg-black relative"
+                            />
+                        </div>
+                    </div >
 
-                        {loading ? (
-                            <div className="flex flex-col items-center justify-center py-20 gap-4">
-                                <Rocket className="w-12 h-12 text-[#D4F478] animate-bounce" />
-                                <p className="text-gray-500 font-bold animate-pulse uppercase tracking-[0.2em] text-xs">Loading Journey...</p>
-                            </div>
-                        ) : projects.length === 0 ? (
-                            <div className="text-center py-20 bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-200">
-                                <Rocket className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                                <h3 className="text-xl font-bold text-gray-500">No Projects Available</h3>
-                                <p className="text-gray-400 max-w-xs mx-auto text-sm mt-2">Our team is preparing high-impact builds for you. Check back soon!</p>
-                            </div>
-                        ) : (
-                            <div className="relative pb-10">
-                                {projects.map((project, index) => (
-                                    <React.Fragment key={project._id || index}>
-                                        {index > 0 && (
-                                            <PathLine
-                                                status={getPathStatus(projects[index - 1].id, project.id)}
-                                                height={70}
-                                            />
-                                        )}
-                                        <ProjectNode
-                                            project={project}
-                                            submissions={submissions}
-                                            onClick={handleProjectClick}
-                                            isFinal={index === projects.length - 1 && projects.length > 1}
-                                        />
-                                    </React.Fragment>
-                                ))}
-                            </div>
-                        )}
+                    {/* Course Selector Container */}
 
-                        {/* Completion Milestone - Only show when ALL projects are reviewed */}
-                        {projects.length > 0 && submissions.filter(s => s.status === "reviewed").length === projects.length && (
-                            <div className="mt-16 text-center bg-black text-white p-10 rounded-[2.5rem] shadow-xl relative overflow-hidden group">
-                                <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                <div className="relative z-10">
-                                    <Trophy size={56} className="mx-auto mb-4 text-[#D4F478]" />
-                                    <h2 className="text-3xl font-black mb-3">You've reached the peak!</h2>
-                                    <p className="text-gray-400 mb-6 max-w-md mx-auto text-sm">Now it's time to build your own legacy. Your skills are ready for the real world.</p>
-                                    <button
-                                        onClick={() => setActiveModal('saas')}
-                                        className="bg-[#D4F478] text-black px-8 py-3.5 rounded-full font-black hover:scale-105 transition-transform flex items-center gap-2 mx-auto shadow-lg shadow-[#D4F478]/10"
-                                    >
-                                        Start Your Own SaaS <ArrowRight size={18} />
-                                    </button>
+                    < div className="flex-1 relative z-10" >
+                        <CourseSelector
+                            courses={courses}
+                            selectedCourse={selectedCourse}
+                            onSelectCourse={handleCourseSelect}
+                            completedCourses={completedCourses}
+                        />
+                    </div >
+                </div >
+
+                {!isProjectMapUnlocked() ? (
+                    <LockedCourseState
+                        courseName={selectedCourse?.name || "this course"}
+                        courseSlug={selectedCourse?.slug}
+                        onNavigateToCourse={() => navigate(`/services/learn--perform/${selectedCourse._id}`)}
+                    />
+                ) : (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, ease: "easeOut" }}
+                            className="w-full max-w-5xl mx-auto bg-white rounded-[2.5rem] p-8 md:p-12 border border-gray-100 shadow-xl relative will-change-transform"
+                        >
+                            <div className="text-center mb-12">
+                                <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-3 tracking-tight">
+                                    {userStats.currentLevel <= projects.length
+                                        ? `Level ${userStats.currentLevel}: ${projects[userStats.currentLevel - 1]?.title}`
+                                        : "Journey Completed! 🏆"
+                                    }
+                                </h1>
+                                <p className="text-gray-500 text-lg font-medium">
+                                    {userStats.currentLevel > projects.length
+                                        ? levelMessages[levelMessages.length - 1]
+                                        : userStats.currentLevel === projects.length && projects.length > 1
+                                            ? levelMessages[32 - 25] // "Final Boss time!"
+                                            : levelMessages[userStats.currentLevel - 1] || levelMessages[0]}
+                                </p>
+                            </div>
+
+                            {loading ? (
+                                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                                    <Rocket className="w-12 h-12 text-[#D4F478] animate-bounce" />
+                                    <p className="text-gray-500 font-bold animate-pulse uppercase tracking-[0.2em] text-xs">Loading Journey...</p>
                                 </div>
+                            ) : projects.length === 0 ? (
+                                <div className="text-center py-20 bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-200">
+                                    <Rocket className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                                    <h3 className="text-xl font-bold text-gray-500">No Projects Available</h3>
+                                    <p className="text-gray-400 max-w-xs mx-auto text-sm mt-2">Our team is preparing high-impact builds for you. Check back soon!</p>
+                                </div>
+                            ) : (
+                                <div className="relative pb-10">
+                                    {projects.map((project, index) => (
+                                        <React.Fragment key={project._id || index}>
+                                            {index > 0 && (
+                                                <PathLine
+                                                    status={getPathStatus(projects[index - 1].id, project.id)}
+                                                    height={70}
+                                                />
+                                            )}
+                                            <ProjectNode
+                                                project={project}
+                                                submissions={submissions}
+                                                onClick={handleProjectClick}
+                                                isFinal={index === projects.length - 1 && projects.length > 1}
+                                            />
+                                        </React.Fragment>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Completion Milestone - Only show when ALL projects are reviewed */}
+                            {projects.length > 0 && submissions.filter(s => s.status === "reviewed").length === projects.length && (
+                                <div className="mt-16 text-center bg-black text-white p-10 rounded-[2.5rem] shadow-xl relative overflow-hidden group">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-yellow-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                    <div className="relative z-10">
+                                        <Trophy size={56} className="mx-auto mb-4 text-[#D4F478]" />
+                                        <h2 className="text-3xl font-black mb-3">You've reached the peak!</h2>
+                                        <p className="text-gray-400 mb-6 max-w-md mx-auto text-sm">Now it's time to build your own legacy. Your skills are ready for the real world.</p>
+                                        <button
+                                            onClick={() => setActiveModal('saas')}
+                                            className="bg-[#D4F478] text-black px-8 py-3.5 rounded-full font-black hover:scale-105 transition-transform flex items-center gap-2 mx-auto shadow-lg shadow-[#D4F478]/10"
+                                        >
+                                            Start Your Own SaaS <ArrowRight size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Legend */}
+                            <div className="mt-16 flex flex-wrap justify-center gap-6 border-t border-gray-50 pt-10">
+                                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-green-500" /><span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Completed</span></div>
+                                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-yellow-400" /><span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">In Progress</span></div>
+                                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-gray-200" /><span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Locked</span></div>
                             </div>
-                        )}
+                        </motion.div>
 
-                        {/* Legend */}
-                        <div className="mt-16 flex flex-wrap justify-center gap-6 border-t border-gray-50 pt-10">
-                            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-green-500" /><span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Completed</span></div>
-                            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-yellow-400" /><span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">In Progress</span></div>
-                            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-gray-200" /><span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Locked</span></div>
-                        </div>
-                    </motion.div>
+                        <AnimatePresence>
+                            {selectedProject && <ProjectDetails project={selectedProject} submissions={submissions} onClose={handleCloseDetails} onAction={handleAction} />}
+                        </AnimatePresence>
 
-                    <AnimatePresence>
-                        {selectedProject && <ProjectDetails project={selectedProject} submissions={submissions} onClose={handleCloseDetails} onAction={handleAction} />}
-                    </AnimatePresence>
+                        <AnimatePresence>
+                            {activeModal === 'submission' && selectedProject && (
+                                <SubmissionModal
+                                    project={selectedProject}
+                                    onClose={() => setActiveModal(null)}
+                                    onSubmit={handleSubmission}
+                                />
+                            )}
+                            {activeModal === 'review' && selectedProject && (
+                                <ReviewStatusModal
+                                    submission={submissions.find(s => s.projectId === selectedProject._id)}
+                                    onClose={() => setActiveModal(null)}
+                                    onResubmit={() => {
+                                        setActiveModal('submission');
+                                    }}
+                                />
+                            )}
+                            {activeModal === 'saas' && (
+                                <SaaSMotivationModal onClose={() => setActiveModal(null)} />
+                            )}
+                        </AnimatePresence>
 
-                    <AnimatePresence>
-                        {activeModal === 'submission' && selectedProject && (
-                            <SubmissionModal
-                                project={selectedProject}
-                                onClose={() => setActiveModal(null)}
-                                onSubmit={handleSubmission}
-                            />
-                        )}
-                        {activeModal === 'review' && selectedProject && (
-                            <ReviewStatusModal
-                                submission={submissions.find(s => s.projectId === selectedProject._id)}
-                                onClose={() => setActiveModal(null)}
-                                onResubmit={() => {
-                                    setActiveModal('submission');
-                                }}
-                            />
-                        )}
-                        {activeModal === 'saas' && (
-                            <SaaSMotivationModal onClose={() => setActiveModal(null)} />
-                        )}
-                    </AnimatePresence>
-
-                    <footer className="mt-12 text-center text-gray-400 pb-8">
-                        <p className="font-bold text-[10px] tracking-[0.2em] uppercase mb-1">Build Better • Launch Faster</p>
-                        <p className="text-[10px]">© 2024 Learning Journey Platform</p>
-                    </footer>
-                </>
-            )}
+                        <footer className="mt-12 text-center text-gray-400 pb-8">
+                            <p className="font-bold text-[10px] tracking-[0.2em] uppercase mb-1">Build Better • Launch Faster</p>
+                            <p className="text-[10px]">© 2024 Learning Journey Platform</p>
+                        </footer>
+                    </>
+                )
+                }
+            </div>
         </div>
     );
 }

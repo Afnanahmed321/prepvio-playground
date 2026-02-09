@@ -10,8 +10,9 @@ import {
     User
 } from 'lucide-react';
 import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import socket from '../socket';
+import MobileDashboardHeader from '../components/MobileDashboardHeader';
 
 const TicketDetail = () => {
     const { ticketId } = useParams();
@@ -22,6 +23,7 @@ const TicketDetail = () => {
     const [newMessage, setNewMessage] = useState('');
     const [sending, setSending] = useState(false);
     const messagesEndRef = useRef(null);
+    const { setMobileOpen } = useOutletContext();
 
     useEffect(() => {
         fetchTicketDetails();
@@ -132,8 +134,11 @@ const TicketDetail = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#FDFBF9] p-4 md:p-6 lg:p-8 font-sans">
-            <div className="max-w-5xl mx-auto space-y-6">
+        <div className="min-h-screen bg-[#FDFBF9] font-sans">
+            {/* Mobile Header */}
+            <MobileDashboardHeader setMobileOpen={setMobileOpen} />
+
+            <div className="max-w-5xl mx-auto space-y-6 p-4 md:p-6 lg:p-8">
 
                 {/* Header */}
                 <div className="flex items-center gap-4">
@@ -215,8 +220,8 @@ const TicketDetail = () => {
 
                                             {/* Message Bubble */}
                                             <div className={`relative px-5 py-3.5 rounded-2xl shadow-sm text-sm leading-relaxed ${isMe
-                                                    ? 'bg-[#1A1A1A] text-white rounded-br-none'
-                                                    : 'bg-slate-50 border border-slate-100 text-slate-800 rounded-bl-none'
+                                                ? 'bg-[#1A1A1A] text-white rounded-br-none'
+                                                : 'bg-slate-50 border border-slate-100 text-slate-800 rounded-bl-none'
                                                 }`}>
                                                 <p>{msg.text}</p>
                                                 <span className={`text-[10px] font-bold mt-1.5 block opacity-60 ${isMe ? 'text-right' : 'text-left'}`}>

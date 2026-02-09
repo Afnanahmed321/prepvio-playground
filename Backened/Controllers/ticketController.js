@@ -2,6 +2,7 @@ import Ticket from '../Models/Ticket.js';
 import Conversation from '../Models/Conversation.js';
 import Message from '../Models/Message.js';
 import { User } from '../Models/User.js';
+import { sendTicketReplyNotification } from '../Utils/notificationHelper.js';
 
 // Create a new ticket (User)
 export const createTicket = async (req, res) => {
@@ -398,6 +399,9 @@ export const adminReplyToTicket = async (req, res) => {
             req.io.to(ticket.conversationId).emit('new_message', message.toClientFormat());
             req.io.emit('ticket_updated', ticket.toClientFormat());
         }
+
+        // Send notification to the user
+        await sendTicketReplyNotification(ticket.userId, ticket.ticketId);
 
         res.status(201).json({
             success: true,

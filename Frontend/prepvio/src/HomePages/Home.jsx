@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import AuthModal from "../components/AuthModal"; // Add this line
+import MobileRestrictionModal from "../components/MobileRestrictionModal"; // ✅ ADD THIS
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -98,12 +99,19 @@ const HeroTextSection = () => {
   const { isAuthenticated, user } = useAuthStore();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [modalType, setModalType] = useState('login');
+  const [showMobileModal, setShowMobileModal] = useState(false); // ✅ ADD MOBILE MODAL STATE
 
   // ✅ Check if user has used any credits
   const hasStartedInterviews = user?.subscription?.interviewsUsed > 0;
   const buttonText = hasStartedInterviews ? "Resume Practice" : "Start Practice";
 
   const handleStartPractice = () => {
+    // Check for mobile device
+    if (window.innerWidth < 768) {
+      setShowMobileModal(true);
+      return;
+    }
+
     if (!isAuthenticated) {
       setModalType('login');
       setShowAuthModal(true);
@@ -126,6 +134,10 @@ const HeroTextSection = () => {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         type={modalType}
+      />
+      <MobileRestrictionModal
+        isOpen={showMobileModal}
+        onClose={() => setShowMobileModal(false)}
       />
 
       <motion.div variants={itemSideVariants("left")} className="flex flex-col justify-center h-full relative z-30">

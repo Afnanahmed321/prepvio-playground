@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, Sparkles, Activity } from "lucide-react";
 import { useAuthStore } from "../store/authstore"; // ✅ ADD THIS
 import AuthModal from "../components/AuthModal"; // ✅ ADD THIS
+import MobileRestrictionModal from "../components/MobileRestrictionModal"; // ✅ ADD THIS
 
 const ZigZagServices = () => {
   // ==========================================
@@ -16,6 +17,7 @@ const ZigZagServices = () => {
   const [activeImageIndex, setActiveImageIndex] = useState({});
   const [showAuthModal, setShowAuthModal] = useState(false); // ✅ ADD THIS
   const [modalType, setModalType] = useState('login'); // ✅ ADD THIS
+  const [showMobileModal, setShowMobileModal] = useState(false); // ✅ ADD MOBILE MODAL STATE
   const serviceRefs = useRef([]);
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuthStore(); // ✅ ADD THIS
@@ -71,6 +73,12 @@ const ZigZagServices = () => {
 
   // ✅ UPDATED: Check authentication before navigation
   const handleNavigate = (slug) => {
+    // Check for mobile device
+    if (window.innerWidth < 768) {
+      setShowMobileModal(true);
+      return;
+    }
+
     if (!isAuthenticated) {
       setModalType('login');
       setShowAuthModal(true);
@@ -101,6 +109,10 @@ const ZigZagServices = () => {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         type={modalType}
+      />
+      <MobileRestrictionModal
+        isOpen={showMobileModal}
+        onClose={() => setShowMobileModal(false)}
       />
 
       <section id="services" className="py-20 relative bg-[#FDFBF9] overflow-hidden font-sans">

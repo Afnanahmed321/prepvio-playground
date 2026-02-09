@@ -1,5 +1,7 @@
 import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useOutletContext } from "react-router-dom";
+import MobileDashboardHeader from "../components/MobileDashboardHeader";
 import {
   Bell,
   Check,
@@ -67,6 +69,7 @@ const getNotificationStyle = (type) => {
 function Notifications() {
   // ✅ USE ZUSTAND STORE INSTEAD OF LOCAL STATE
   const { addNotification } = useNotificationStore();
+  const { setMobileOpen } = useOutletContext();
 
   const {
     notifications,
@@ -112,9 +115,11 @@ function Notifications() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF9] font-sans selection:bg-[#D4F478] selection:text-black p-4 md:p-8">
+    <div className="min-h-screen bg-[#FDFBF9] font-sans selection:bg-[#D4F478] selection:text-black">
+      {/* Mobile Header */}
+      <MobileDashboardHeader setMobileOpen={setMobileOpen} />
 
-      <div className="max-w-4xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto space-y-8 p-4 md:p-8">
 
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

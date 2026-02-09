@@ -11,18 +11,23 @@ import { io } from "../server.js";
  */
 export const sendNotification = async (userId, title, message, type = "general", metadata = {}) => {
   try {
-    // ✅ PREVENT RAPID-FIRE DUPLICATES: Check for existing recent notifications with same content
-    const existing = await Notification.findOne({
-      userId,
-      title,
-      message,
-      type,
-      createdAt: { $gt: new Date(Date.now() - 5 * 60 * 1000) } // Within last 5 minutes
-    });
+    console.log(`[DEBUG] Attempting to send notification to ${userId}: ${title}`);
 
-    if (existing) {
-      // console.log("Blocked duplicate notification:", title);
-      return existing;
+    // ✅ PREVENT RAPID-FIRE DUPLICATES: Check for existing recent notifications with same content
+    // EXCEPT for ticket replies, as multiple replies to the same ticket are valid.
+    if (type !== "system") {
+      const existing = await Notification.findOne({
+        userId,
+        title,
+        message,
+        type,
+        createdAt: { $gt: new Date(Date.now() - 5 * 60 * 1000) } // Within last 5 minutes
+      });
+
+      if (existing) {
+        console.log(`[DEBUG] Blocked duplicate notification: ${title}`);
+        return existing;
+      }
     }
 
     // Create notification in database
@@ -36,11 +41,18 @@ export const sendNotification = async (userId, title, message, type = "general",
     });
 
     await notification.save();
+    console.log(`[DEBUG] Notification saved to DB: ${notification._id}`);
 
     // Emit socket event to send real-time notification
+    // Use dynamic import to avoid circular dependency issues at the top level
+    const { io } = await import("../server.js");
+
     if (io) {
       // ✅ USE CORRECT ROOM NAME (toString)
       io.to(userId.toString()).emit("NEW_NOTIFICATION", notification);
+      console.log(`[DEBUG] Socket emission sent to user room: ${userId}`);
+    } else {
+      console.warn("[DEBUG] Socket.io instance not available in notificationHelper");
     }
 
     return notification;
@@ -158,5 +170,18 @@ export const sendAchievementNotification = async (userId, achievementTitle, achi
     achievementDescription,
     "achievement",
     { action: "achievement", title: achievementTitle }
+  );
+};
+
+/**
+ * Support ticket reply notification
+ */
+export const sendTicketReplyNotification = async (userId, ticketId) => {
+  return sendNotification(
+    userId,
+    "🎫 Support Ticket Update",
+    `There is a new reply for your ticket ${ticketId || ""}. Check it out in the Support section.`,
+    "system",
+    { action: "ticket_reply", ticketId }
   );
 };

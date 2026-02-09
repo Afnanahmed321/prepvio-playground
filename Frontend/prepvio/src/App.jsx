@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import socket, { connectSocket, disconnectSocket } from "./socket";
 import { useNotificationStore } from "./store/notificationStore";
@@ -97,6 +97,13 @@ const RedirectAuthenticatedUser = ({ children }) => {
 function App() {
 	const { isCheckingAuth, checkAuth, isAuthenticated, user } = useAuthStore();
 	const { fetchNotifications, fetchUnreadCount, addNotification } = useNotificationStore();
+	const location = useLocation();
+
+	// ✅ Hide footer on dashboard and check-your-ability routes if needed
+	const isDashboard = location.pathname.startsWith("/dashboard");
+	const isInterview = location.pathname.includes("/interview") || location.pathname.includes("/services/check-your-ability");
+
+	const showFooter = !isDashboard && !isInterview;
 
 	// ✅ CLEANED UP: Single socket connection useEffect
 	useEffect(() => {
@@ -253,7 +260,7 @@ function App() {
 				{/* Route moved to Dashboard */}
 			</Routes>
 
-			<Footer />
+			{showFooter && <Footer />}
 			<VoiceAssistant />
 			<Toaster />
 		</>

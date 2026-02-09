@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
+import MobileDashboardHeader from "../components/MobileDashboardHeader";
 
 
 
@@ -42,6 +43,7 @@ export default function Feedback() {
   const [searchParams] = useSearchParams();
   const [feedbackText, setFeedbackText] = useState("");
   const navigate = useNavigate();
+  const { setMobileOpen } = useOutletContext();
 
 
 
@@ -120,6 +122,9 @@ export default function Feedback() {
 
   return (
     <div className="min-h-screen bg-[#FDFBF9] font-sans selection:bg-[#D4F478] selection:text-black p-4 md:p-12 relative overflow-hidden">
+      {/* Mobile Header */}
+      <MobileDashboardHeader setMobileOpen={setMobileOpen} />
+
       {/* Decorative background blobs */}
       <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-[#D4F478]/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-blue-100/30 rounded-full blur-[120px] pointer-events-none" />
@@ -163,8 +168,8 @@ export default function Feedback() {
                       type="button"
                       onClick={() => setCategory(cat.id)}
                       className={`flex items-center justify-between p-5 rounded-2xl border-2 transition-all group ${isActive
-                          ? "bg-black border-black text-white shadow-xl shadow-black/10 translate-x-2"
-                          : "bg-white/50 border-gray-100 text-gray-600 hover:border-gray-200"
+                        ? "bg-black border-black text-white shadow-xl shadow-black/10 translate-x-2"
+                        : "bg-white/50 border-gray-100 text-gray-600 hover:border-gray-200"
                         }`}
                     >
                       <div className="flex items-center gap-4">
@@ -198,8 +203,8 @@ export default function Feedback() {
                     >
                       <Star
                         className={`w-9 h-9 transition-all duration-300 ${(hoverRating || rating) >= star
-                            ? "fill-[#D4F478] text-[#D4F478] drop-shadow-[0_0_8px_rgba(212,244,120,0.5)]"
-                            : "text-gray-100"
+                          ? "fill-[#D4F478] text-[#D4F478] drop-shadow-[0_0_8px_rgba(212,244,120,0.5)]"
+                          : "text-gray-100"
                           }`}
                       />
                     </button>

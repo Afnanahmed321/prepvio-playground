@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
+import MobileDashboardHeader from "../components/MobileDashboardHeader";
 import {
   BookOpen,
   Play,
@@ -55,6 +56,7 @@ const getCourseStyle = (thumbnail) => {
 
 function Learning() {
   const navigate = useNavigate();
+  const { setMobileOpen } = useOutletContext();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -162,9 +164,11 @@ function Learning() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFBF9] font-sans selection:bg-[#D4F478] selection:text-black p-4 md:p-8">
+    <div className="min-h-screen bg-[#FDFBF9] font-sans selection:bg-[#D4F478] selection:text-black">
+      {/* Mobile Header */}
+      <MobileDashboardHeader setMobileOpen={setMobileOpen} />
 
-      <div className="max-w-[1600px] mx-auto space-y-8">
+      <div className="max-w-[1600px] mx-auto space-y-8 p-4 md:p-8">
 
         {/* Header Section */}
         <motion.div

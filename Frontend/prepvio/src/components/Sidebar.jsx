@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNotificationStore } from "../store/notificationStore";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
@@ -24,12 +25,12 @@ import {
 
 // --- COMPONENTS (Unchanged logic, just ensuring props pass through) ---
 
-const SidebarLink = ({ icon: Icon, label, to, badge, showDot, collapsed }) => {
+const SidebarLink = ({ icon: Icon, label, to, badge, showDot, collapsed, onClick }) => {
   const location = useLocation();
   const isActive = location.pathname === to;
 
   return (
-    <Link to={to} className="block w-full">
+    <Link to={to} className="block w-full" onClick={onClick}>
       <div
         className={`relative flex items-center w-full gap-4 py-3.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200 group overflow-hidden ${isActive
           ? "bg-[#1A1A1A] text-white shadow-lg shadow-gray-200"
@@ -170,7 +171,7 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [learningCount, setLearningCount] = useState(0);
-  const [hasNewNotifications, setHasNewNotifications] = useState(false);
+  const { unreadCount, fetchUnreadCount } = useNotificationStore();
 
   // Check screen size to handle responsive behavior
   useEffect(() => {
@@ -204,20 +205,8 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
 
   // Fetch notification status
   useEffect(() => {
-    const fetchNotificationStatus = async () => {
-      try {
-        const res = await axios.get(
-          "/api/notifications/unread-count",
-          { withCredentials: true }
-        );
-        setHasNewNotifications(res.data.count > 0);
-      } catch (err) {
-        console.error("Failed to fetch notification status", err);
-      }
-    };
-
-    fetchNotificationStatus();
-  }, []);
+    fetchUnreadCount();
+  }, [fetchUnreadCount]);
 
   // Animation variants: Different logic for Mobile vs Desktop
   const sidebarVariants = {
@@ -231,6 +220,10 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
       x: mobileOpen ? 0 : -288, // Slide in/out
       transition: { duration: 0.3, ease: "easeInOut" }
     }
+  };
+
+  const handleMobileClick = () => {
+    if (isMobile) setMobileOpen(false);
   };
 
   return (
@@ -267,7 +260,7 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
           `}
         >
           {isMobile ? (
-            <X className="w-3 h-3" />
+            <X className="w-4 h-4 text-gray-900" />
           ) : (
             <ChevronLeft className={`w-3 h-3 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`} />
           )}
@@ -298,36 +291,37 @@ const Sidebar = ({ mobileOpen, setMobileOpen }) => {
 
         {/* Menu Items */}
         <div className="px-3 space-y-2 flex-1 overflow-y-auto custom-scrollbar overflow-x-hidden">
-          <SidebarLink icon={LayoutDashboard} label="Dashboard" to="/dashboard" collapsed={isCollapsed} />
-          <SidebarLink icon={Settings} label="Account" to="/dashboard/setting" collapsed={isCollapsed} />
-          <SidebarLink icon={Bell} label="Notifications" to="/dashboard/notifications" showDot={hasNewNotifications} collapsed={isCollapsed} />
+          <SidebarLink icon={LayoutDashboard} label="Dashboard" to="/dashboard" collapsed={isCollapsed} onClick={handleMobileClick} />
+          <SidebarLink icon={Settings} label="Account" to="/dashboard/setting" collapsed={isCollapsed} onClick={handleMobileClick} />
+          <SidebarLink icon={Bell} label="Notifications" to="/dashboard/notifications" showDot={unreadCount > 0} collapsed={isCollapsed} onClick={handleMobileClick} />
           <SidebarLink
             icon={BookOpen}
             label="Learning"
             to="/dashboard/learning"
             badge={learningCount > 0 ? learningCount : null}
             collapsed={isCollapsed}
+            onClick={handleMobileClick}
           />
 
-          <SidebarLink icon={Rocket} label="Project Map" to="/dashboard/learning-map" collapsed={isCollapsed} />
+          <SidebarLink icon={Rocket} label="Project Map" to="/dashboard/learning-map" collapsed={isCollapsed} onClick={handleMobileClick} />
           <DropdownMenu title="Saved Courses" icon={Bookmark} collapsed={isCollapsed} setSidebarCollapsed={setIsCollapsed} >
-            <SidebarLink icon={Bookmark} label="My Courses" to="/dashboard/saved-courses" collapsed={isCollapsed} />
+            <SidebarLink icon={Bookmark} label="My Courses" to="/dashboard/saved-courses" collapsed={isCollapsed} onClick={handleMobileClick} />
           </DropdownMenu>
 
-          <SidebarLink icon={Search} label="Interview Analysis" to="/dashboard/interview-analysis" collapsed={isCollapsed} />
-          <SidebarLink icon={Search} label="Aptitude Test Analysis" to="/dashboard/aptitude-test-analysis" collapsed={isCollapsed} />
-          <SidebarLink icon={CreditCard} label="Pricing" to="/dashboard/pricing" collapsed={isCollapsed} />
+          <SidebarLink icon={Search} label="Interview Analysis" to="/dashboard/interview-analysis" collapsed={isCollapsed} onClick={handleMobileClick} />
+          <SidebarLink icon={Search} label="Aptitude Test Analysis" to="/dashboard/aptitude-test-analysis" collapsed={isCollapsed} onClick={handleMobileClick} />
+          <SidebarLink icon={CreditCard} label="Pricing" to="/dashboard/pricing" collapsed={isCollapsed} onClick={handleMobileClick} />
 
           <DropdownMenu title="Help Desk" icon={LifeBuoy} collapsed={isCollapsed} setSidebarCollapsed={setIsCollapsed}>
-            <SidebarLink icon={Ticket} label="My Tickets" to="/dashboard/tickets" collapsed={isCollapsed} />
-            <SidebarLink icon={LifeBuoy} label="Inbox" to="/dashboard/messages/inbox" collapsed={isCollapsed} />
-            <SidebarLink icon={HelpCircle} label="FAQs" to="/dashboard/help/faq" collapsed={isCollapsed} />
+            <SidebarLink icon={Ticket} label="My Tickets" to="/dashboard/tickets" collapsed={isCollapsed} onClick={handleMobileClick} />
+            {/* <SidebarLink icon={LifeBuoy} label="Inbox" to="/dashboard/messages/inbox" collapsed={isCollapsed} onClick={handleMobileClick} /> */}
+            <SidebarLink icon={HelpCircle} label="FAQs" to="/dashboard/help/faq" collapsed={isCollapsed} onClick={handleMobileClick} />
           </DropdownMenu>
         </div>
 
         {/* Footer / Logout */}
         <div className="p-4 border-t border-gray-50 mt-auto">
-          <SidebarLink icon={LogOut} label="LogOut" to="/logout" collapsed={isCollapsed} />
+          <SidebarLink icon={LogOut} label="LogOut" to="/logout" collapsed={isCollapsed} onClick={handleMobileClick} />
         </div>
       </motion.aside>
     </>

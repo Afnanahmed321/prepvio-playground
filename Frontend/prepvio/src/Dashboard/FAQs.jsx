@@ -12,7 +12,8 @@ import {
   Minus, 
   LifeBuoy
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
+import MobileDashboardHeader from "../components/MobileDashboardHeader";
 
 // --- DATA ---
 const faqCategories = [
@@ -83,6 +84,7 @@ function FAQs() {
   const [searchTerm, setSearchTerm] = useState("");
   const [openFAQ, setOpenFAQ] = useState(null);
   const [showContactPopup, setShowContactPopup] = useState(false);
+  const { setMobileOpen } = useOutletContext();
 
   const toggleFAQ = (id) => {
     setOpenFAQ(openFAQ === id ? null : id);
@@ -100,10 +102,12 @@ function FAQs() {
   const totalFAQs = faqCategories.reduce((sum, cat) => sum + cat.questions.length, 0);
 
   return (
-    <div className="min-h-screen bg-[#FDFBF9] font-sans selection:bg-[#D4F478] selection:text-black p-4 md:p-8">
+    <div className="min-h-screen bg-[#FDFBF9] font-sans selection:bg-[#D4F478] selection:text-black">
+      {/* Mobile Header */}
+      <MobileDashboardHeader setMobileOpen={setMobileOpen} />
       
       {/* Centered Container - Width restricted for readability */}
-      <div className="max-w-3xl mx-auto space-y-8 md:space-y-12 pb-10">
+      <div className="max-w-3xl mx-auto space-y-8 md:space-y-12 pb-10 p-4 md:p-8">
         
         {/* Header Section */}
         <div className="text-center max-w-2xl mx-auto space-y-4 md:space-y-6 pt-4 md:pt-10">
